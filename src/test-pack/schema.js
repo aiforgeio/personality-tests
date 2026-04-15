@@ -105,7 +105,6 @@ function validateDisplay(display) {
     'statsLine',
     'estimatedDurationLabel',
     'secondaryNote',
-    'author',
     'disclaimer',
     'startButtonLabel',
     'restartButtonLabel',
