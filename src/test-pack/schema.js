@@ -310,6 +310,18 @@ export function validatePackManifest(manifest) {
     assertOptionalString(manifest.shareConfig.linkCopyText, 'pack.shareConfig.linkCopyText must be a string')
   }
 
+  ;[
+    'promptTitle',
+    'promptBody',
+    'primaryActionLabel',
+    'secondaryActionLabel',
+    'floatingLabel',
+  ].forEach((key) => {
+    if (manifest.shareConfig[key] != null) {
+      assertOptionalString(manifest.shareConfig[key], `pack.shareConfig.${key} must be a string`)
+    }
+  })
+
   return manifest
 }
 

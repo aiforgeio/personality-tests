@@ -325,6 +325,10 @@ export function createAppController({
   /* ---- 页面切换 ---- */
 
   function showPage(name) {
+    if (name !== 'result') {
+      resultView.setActive(false)
+    }
+
     Object.values(pages).forEach((page) => {
       if (!page) return
       page.classList.remove('active')
@@ -335,7 +339,11 @@ export function createAppController({
 
     target.classList.add('active')
     document.body.dataset.page = name
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: name === 'result' ? 'auto' : 'smooth' })
+
+    if (name === 'result') {
+      resultView.setActive(true)
+    }
   }
 
   /* ---- 按钮状态 ---- */
@@ -384,7 +392,10 @@ function setStartButtonState({ disabled, label }) {
       disabled: false,
       label: display.startButtonLabel || '开始测试',
     })
-    resultView.configure(display)
+    resultView.configure({
+      display,
+      share: manifest.shareConfig || {},
+    })
   }
 
   function applyPackDetails(pack) {
@@ -491,6 +502,10 @@ function setStartButtonState({ disabled, label }) {
       await new Promise((resolve) => setTimeout(resolve, 2500))
       await heroImageReady
 
+      resultView.configure({
+        display: pack.display || {},
+        share: pack.shareConfig || {},
+      })
       resultView.render(latestResult, pack)
       stopLoadingAnimation(stopLoadingFn)
       showPage('result')
@@ -513,7 +528,9 @@ function setStartButtonState({ disabled, label }) {
   async function handleDownload(button) {
     if (!latestResult || !activePack) return
 
-    const defaultLabel = activePack.display?.downloadButtonLabel || '保存结果图片'
+    const defaultLabel = activePack.shareConfig?.primaryActionLabel
+      || activePack.display?.downloadButtonLabel
+      || '保存海报'
     button.disabled = true
     const textEl = button.querySelector('span:last-child') || button
     const originalText = textEl.textContent
@@ -565,11 +582,11 @@ function setStartButtonState({ disabled, label }) {
         }
         showToast('截图已生成（Dev 预览模式）')
       } else {
-        showToast('图片已保存到相册 🎉')
+        showToast('海报已生成，快去分享吧')
       }
     } catch (error) {
       console.error('Download error:', error)
-      showToast('保存失败，请截图保存')
+      showToast('海报生成失败，请截图保存')
     } finally {
       button.disabled = false
       textEl.textContent = originalText || defaultLabel
@@ -623,7 +640,7 @@ function setStartButtonState({ disabled, label }) {
 
       if (navigator.clipboard) {
         navigator.clipboard.writeText(copyText).then(() => {
-          showToast('已复制到剪贴板，快去分享吧')
+          showToast('链接已复制，发给朋友一起测吧')
         }).catch(() => {
           showToast('请手动复制链接分享')
         })
@@ -659,9 +676,14 @@ function setStartButtonState({ disabled, label }) {
         
         const scorer = scorerRegistry.get(pack.scorerId)
         latestResult = scorer.score({ answers: mockAnswers, pack, flowState: {} })
-        
+
+        resultView.configure({
+          display: pack.display || {},
+          share: pack.shareConfig || {},
+        })
         resultView.render(latestResult, pack)
         showPage('result')
+        renderPageQR()
         return true
       }
     } catch (error) {

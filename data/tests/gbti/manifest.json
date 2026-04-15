@@ -142,6 +142,11 @@
   "shareConfig": {
     "title": "GBTI 股民人格测试",
     "linkCopyText": "来测测你的股民人格类型",
+    "promptTitle": "觉得这个结果不错？",
+    "promptBody": "先生成海报，发给朋友扫码一起测",
+    "primaryActionLabel": "生成海报",
+    "secondaryActionLabel": "分享链接",
+    "floatingLabel": "生成海报",
     "footer": "GBTI · 股民人格测试 · 仅供娱乐",
     "rankingTitle": "常规人格 TOP 3",
     "rankingLimit": 3,
