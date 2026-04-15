@@ -374,14 +374,41 @@ function isCompactViewport() {
   return window.matchMedia('(max-width: 430px)').matches
 }
 
+function setOptionalText(element, value) {
+  if (!element) return
+
+  const text = String(value ?? '').trim()
+  element.textContent = text
+  element.hidden = !text
+}
+
 /* ---- 主结果视图 ---- */
 
 export function createResultView({ onRestart, onDownload }) {
+  const actionDefaults = {
+    promptTitle: '觉得这个结果不错？',
+    promptBody: '先生成海报，发给朋友扫码一起测',
+    primaryActionLabel: '保存海报',
+    secondaryActionLabel: '分享链接',
+    floatingLabel: '保存海报',
+  }
+  const collapseScrollThreshold = 320
+  const collapseCardExitOffset = 88
+
   let currentResult = null
   let displayConfig = {}
+  let shareConfig = {}
+  let isActive = false
+  let isCollapsed = false
+  let scrollListenerAttached = false
 
   const els = {
+    actions: document.getElementById('result-actions'),
+    actionsCopy: document.getElementById('result-actions-copy'),
+    actionsTitle: document.getElementById('result-actions-title'),
+    actionsBody: document.getElementById('result-actions-body'),
     badge: document.getElementById('share-card-badge'),
+    shareCard: document.getElementById('result-share-card'),
     imageWrap: document.getElementById('result-hero-image-wrap'),
     summary: document.getElementById('result-hero-summary'),
     stats: document.getElementById('result-key-stats'),
@@ -393,39 +420,161 @@ export function createResultView({ onRestart, onDownload }) {
     restart: document.getElementById('btn-restart'),
   }
 
-  function updateActionLabels() {
-    const compact = isCompactViewport()
+  function resolveActionLabel(value, fallback) {
+    const text = String(value ?? '').trim()
+    return text || fallback
+  }
+
+  function resolvePrimaryLabel({ floating = false } = {}) {
+    if (floating) {
+      return resolveActionLabel(
+        shareConfig.floatingLabel,
+        resolveActionLabel(
+          shareConfig.primaryActionLabel,
+          resolveActionLabel(displayConfig.downloadButtonLabel, actionDefaults.floatingLabel),
+        ),
+      )
+    }
+
+    if (shareConfig.primaryActionLabel != null) {
+      return resolveActionLabel(shareConfig.primaryActionLabel, actionDefaults.primaryActionLabel)
+    }
+
+    if (!isCompactViewport() && displayConfig.downloadButtonLabel != null) {
+      return resolveActionLabel(displayConfig.downloadButtonLabel, actionDefaults.primaryActionLabel)
+    }
+
+    return actionDefaults.primaryActionLabel
+  }
+
+  function resolveSecondaryLabel() {
+    if (shareConfig.secondaryActionLabel != null) {
+      return resolveActionLabel(shareConfig.secondaryActionLabel, actionDefaults.secondaryActionLabel)
+    }
+
+    return isCompactViewport() ? actionDefaults.secondaryActionLabel : '分享好友'
+  }
+
+  function resolveRestartLabel() {
+    const fallback = '再测一次'
+    return resolveActionLabel(displayConfig.restartButtonLabel, fallback)
+  }
+
+  function updateActionCopy() {
+    setOptionalText(
+      els.actionsTitle,
+      shareConfig.promptTitle ?? actionDefaults.promptTitle,
+    )
+    setOptionalText(
+      els.actionsBody,
+      shareConfig.promptBody ?? actionDefaults.promptBody,
+    )
+
+    if (els.actionsCopy) {
+      const titleHidden = !els.actionsTitle || els.actionsTitle.hidden
+      const bodyHidden = !els.actionsBody || els.actionsBody.hidden
+      els.actionsCopy.hidden = titleHidden && bodyHidden
+    }
+  }
+
+  function applyActionState() {
+    const collapsed = isActive && isCompactViewport() && isCollapsed
+
+    if (els.actions) {
+      els.actions.classList.toggle('is-collapsed', collapsed)
+      els.actions.classList.toggle('is-expanded', !collapsed)
+      els.actions.dataset.state = collapsed ? 'collapsed' : 'expanded'
+      els.actions.setAttribute('aria-expanded', collapsed ? 'false' : 'true')
+    }
 
     if (els.download) {
       const textEl = els.download.querySelector('span:last-child')
-      const label = compact
-        ? '保存海报'
-        : (displayConfig.downloadButtonLabel || '保存结果图片')
-      const normalized = stripEndingPunctuation(label)
-      if (textEl) textEl.textContent = normalized
-      else els.download.textContent = normalized
+      const label = collapsed ? resolvePrimaryLabel({ floating: true }) : resolvePrimaryLabel()
+      if (textEl) textEl.textContent = label
+      else els.download.textContent = label
+      els.download.setAttribute(
+        'aria-label',
+        collapsed ? `${label}，点击展开分享操作` : label,
+      )
     }
 
     if (els.share) {
       const textEl = els.share.querySelector('span:last-child')
-      const label = compact ? '分享链接' : '分享好友'
-      const normalized = stripEndingPunctuation(label)
-      if (textEl) textEl.textContent = normalized
-      else els.share.textContent = normalized
+      const label = resolveSecondaryLabel()
+      if (textEl) textEl.textContent = label
+      else els.share.textContent = label
     }
 
     if (els.restart) {
       const textEl = els.restart.querySelector('span:last-child')
-      const label = compact ? '再测一次' : (displayConfig.restartButtonLabel || '再测一次')
-      const normalized = stripEndingPunctuation(label)
-      if (textEl) textEl.textContent = normalized
-      else els.restart.textContent = normalized
+      const label = resolveRestartLabel()
+      if (textEl) textEl.textContent = label
+      else els.restart.textContent = label
     }
+  }
+
+  function setCollapsed(nextCollapsed) {
+    const normalized = Boolean(nextCollapsed)
+      && isActive
+      && isCompactViewport()
+      && !els.download?.disabled
+
+    if (normalized === isCollapsed) return
+    isCollapsed = normalized
+    applyActionState()
+  }
+
+  function syncActionState({ force = false } = {}) {
+    if (!isActive || !isCompactViewport() || els.download?.disabled) {
+      if (force || isCollapsed) {
+        isCollapsed = false
+        applyActionState()
+      }
+      return
+    }
+
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0
+    const shareCardBottom = els.shareCard?.getBoundingClientRect().bottom ?? Number.POSITIVE_INFINITY
+    const shouldCollapse = scrollTop > collapseScrollThreshold || shareCardBottom <= collapseCardExitOffset
+
+    if (force || shouldCollapse !== isCollapsed) {
+      isCollapsed = shouldCollapse
+      applyActionState()
+    }
+  }
+
+  function handleViewportChange() {
+    syncActionState({ force: true })
+  }
+
+  function handleActionScroll() {
+    syncActionState()
+  }
+
+  function ensureScrollListener() {
+    if (scrollListenerAttached) return
+    window.addEventListener('scroll', handleActionScroll, { passive: true })
+    scrollListenerAttached = true
+  }
+
+  function removeScrollListener() {
+    if (!scrollListenerAttached) return
+    window.removeEventListener('scroll', handleActionScroll)
+    scrollListenerAttached = false
+  }
+
+  function updateActionLabels() {
+    updateActionCopy()
+    applyActionState()
   }
 
   if (els.download) {
     els.download.addEventListener('click', () => {
       if (!currentResult) return
+      if (isActive && isCompactViewport() && isCollapsed) {
+        setCollapsed(false)
+        return
+      }
       onDownload(els.download)
     })
   }
@@ -436,10 +585,11 @@ export function createResultView({ onRestart, onDownload }) {
     })
   }
 
-  window.addEventListener('resize', updateActionLabels)
+  window.addEventListener('resize', handleViewportChange)
 
-  function configure(display = {}) {
+  function configure({ display = {}, share = {} } = {}) {
     displayConfig = display
+    shareConfig = share
     updateActionLabels()
   }
 
@@ -452,8 +602,34 @@ export function createResultView({ onRestart, onDownload }) {
       renderDetailSections(els.detailSections, result)
     }
 
+    isCollapsed = false
     updateActionLabels()
+
+    if (isActive) {
+      window.requestAnimationFrame(() => {
+        syncActionState({ force: true })
+      })
+    }
   }
 
-  return { configure, render }
+  function setActive(nextActive) {
+    isActive = Boolean(nextActive)
+
+    if (!isActive) {
+      removeScrollListener()
+      isCollapsed = false
+      applyActionState()
+      return
+    }
+
+    isCollapsed = false
+    applyActionState()
+    ensureScrollListener()
+
+    window.requestAnimationFrame(() => {
+      syncActionState({ force: true })
+    })
+  }
+
+  return { configure, render, setActive }
 }

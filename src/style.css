@@ -1710,7 +1710,32 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  padding-bottom: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.result-actions-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.result-actions-title {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.35;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.result-actions-body {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
 }
 
 .result-actions-row {
@@ -1962,7 +1987,7 @@ body {
   }
 
   .result-wrapper {
-    padding-bottom: calc(var(--safe-bottom) + 156px);
+    padding-bottom: calc(var(--safe-bottom) + 224px);
   }
 
   .result-key-stats .stats-inline {
@@ -1999,7 +2024,7 @@ body {
     bottom: calc(var(--safe-bottom) + 12px);
     transform: translateX(-50%);
     width: min(calc(100vw - var(--safe-left) - var(--safe-right) - 24px), calc(var(--max-width) - 8px));
-    padding: 12px;
+    padding: 14px;
     border-radius: 22px;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba(76, 175, 80, 0.12);
@@ -2007,6 +2032,42 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     z-index: 80;
+    transition:
+      width 0.25s ease,
+      padding 0.25s ease,
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      background 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  #page-result.active .result-actions.is-collapsed {
+    width: auto;
+    max-width: calc(100vw - var(--safe-left) - var(--safe-right) - 24px);
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  #page-result.active .result-actions.is-collapsed .result-actions-copy,
+  #page-result.active .result-actions.is-collapsed #btn-share,
+  #page-result.active .result-actions.is-collapsed #btn-restart {
+    display: none;
+  }
+
+  #page-result.active .result-actions.is-collapsed .result-actions-row {
+    display: block;
+  }
+
+  #page-result.active .result-actions.is-collapsed #btn-download {
+    width: auto;
+    min-width: 156px;
+    padding: 14px 20px;
+    border-radius: 999px;
+    box-shadow: 0 10px 26px rgba(76, 175, 80, 0.3);
   }
 
   #page-result.active .result-actions-row {
@@ -2025,7 +2086,7 @@ body {
   }
 
   body[data-page="result"] .toast {
-    bottom: calc(var(--safe-bottom) + 134px);
+    bottom: calc(var(--safe-bottom) + 184px);
   }
 }
 
