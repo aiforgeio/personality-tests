@@ -1,5 +1,13 @@
-import { formatCode, toLines } from './utils.js'
 import QRCode from 'qrcode'
+
+import { getCachedImage, preloadImage } from './image-cache.js'
+import {
+  getHighlightDimensions,
+  getHighlightTags,
+  getPosterComparison,
+  getPosterQuote,
+} from './result-highlights.js'
+import { formatCode, toLines } from './utils.js'
 
 /* ---- Canvas 工具函数 ---- */
 
@@ -17,55 +25,86 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const image = new Image()
-    image.crossOrigin = 'anonymous'
-    image.onload = () => resolve(image)
-    image.onerror = reject
-    image.src = src
+function clipRoundRect(ctx, x, y, w, h, r) {
+  roundRect(ctx, x, y, w, h, r)
+  ctx.save()
+  ctx.clip()
+}
+
+async function resolveImage(src) {
+  if (!src) return null
+
+  const cached = getCachedImage(src)
+  if (cached?.complete && cached.naturalWidth > 0) {
+    return cached
+  }
+
+  return preloadImage(src, {
+    fetchPriority: 'high',
+    decoding: 'async',
   })
 }
 
-const FONT = 'system-ui, "PingFang SC", "Microsoft YaHei", sans-serif'
+function clampLines(text, limit, maxLines) {
+  const lines = toLines(text, limit)
+  if (lines.length <= maxLines) return lines
+
+  const visible = lines.slice(0, maxLines)
+  const tail = visible[maxLines - 1]
+  visible[maxLines - 1] = `${tail.slice(0, Math.max(0, limit - 3))}...`
+  return visible
+}
+
+const FONT = 'system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif'
 
 const PALETTE = {
-  bgStart: '#f3f4f6',
+  bgStart: '#edf4ee',
+  bgEnd: '#f7faf7',
   cardBg: '#ffffff',
-  cardGradientEnd: '#f0f7f0',
-  cardBorder: 'rgba(76, 175, 80, 0.12)',
+  cardGlow: 'rgba(76, 175, 80, 0.10)',
+  cardBorder: 'rgba(76, 175, 80, 0.16)',
   primary: '#4CAF50',
-  primaryDark: '#388E3C',
-  primaryLight: '#81C784',
-  primarySurface: 'rgba(76, 175, 80, 0.06)',
-  secondary: '#2196F3',
-  accent: '#FF9800',
-  text: '#1a1a1a',
-  textSecondary: '#555555',
-  textMuted: '#8c8c8c',
-  textDim: '#bfbfbf',
+  primaryDark: '#2f7d32',
+  primaryLight: '#7bc67f',
+  primarySurface: 'rgba(76, 175, 80, 0.08)',
+  secondarySurface: 'rgba(33, 150, 243, 0.08)',
+  text: '#161616',
+  textSecondary: '#4f4f4f',
+  textMuted: '#7c7c7c',
+  textDim: '#a3a3a3',
+  divider: 'rgba(0, 0, 0, 0.08)',
+  barBg: 'rgba(0, 0, 0, 0.06)',
   tagBg: 'rgba(76, 175, 80, 0.08)',
   tagBorder: 'rgba(76, 175, 80, 0.18)',
-  tagText: '#388E3C',
-  surface: 'rgba(0, 0, 0, 0.025)',
-  divider: 'rgba(0, 0, 0, 0.06)',
 }
 
 /* ---- 绘制背景 ---- */
 
 function drawBackground(ctx, width, height) {
-  ctx.fillStyle = PALETTE.bgStart
+  const gradient = ctx.createLinearGradient(0, 0, 0, height)
+  gradient.addColorStop(0, PALETTE.bgStart)
+  gradient.addColorStop(1, PALETTE.bgEnd)
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, width, height)
+
+  const orbA = ctx.createRadialGradient(120, 120, 0, 120, 120, 180)
+  orbA.addColorStop(0, 'rgba(76, 175, 80, 0.14)')
+  orbA.addColorStop(1, 'rgba(76, 175, 80, 0)')
+  ctx.fillStyle = orbA
+  ctx.fillRect(0, 0, width, height)
+
+  const orbB = ctx.createRadialGradient(width - 60, 180, 0, width - 60, 180, 180)
+  orbB.addColorStop(0, 'rgba(33, 150, 243, 0.08)')
+  orbB.addColorStop(1, 'rgba(33, 150, 243, 0)')
+  ctx.fillStyle = orbB
   ctx.fillRect(0, 0, width, height)
 }
 
-/* ---- 绘制卡片背景（带微妙渐变） ---- */
-
-function drawCardBackground(ctx, x, y, w, h, r = 24) {
+function drawCardBackground(ctx, x, y, w, h, r = 30) {
   roundRect(ctx, x, y, w, h, r)
   const gradient = ctx.createLinearGradient(x, y, x, y + h)
   gradient.addColorStop(0, PALETTE.cardBg)
-  gradient.addColorStop(0.5, '#f8faf8')
-  gradient.addColorStop(1, PALETTE.cardGradientEnd)
+  gradient.addColorStop(1, '#f4faf4')
   ctx.fillStyle = gradient
   ctx.fill()
 
@@ -73,138 +112,238 @@ function drawCardBackground(ctx, x, y, w, h, r = 24) {
   ctx.strokeStyle = PALETTE.cardBorder
   ctx.lineWidth = 1.5
   ctx.stroke()
+
+  const glow = ctx.createRadialGradient(x + w / 2, y + 90, 20, x + w / 2, y + 90, w * 0.45)
+  glow.addColorStop(0, PALETTE.cardGlow)
+  glow.addColorStop(1, 'rgba(76, 175, 80, 0)')
+  ctx.fillStyle = glow
+  roundRect(ctx, x, y, w, h, r)
+  ctx.fill()
 }
 
 /* ---- 绘制英雄图片 ---- */
 
 async function drawHeroPanel(ctx, hero, x, y, width, height) {
+  roundRect(ctx, x, y, width, height, 28)
+  const panelGradient = ctx.createLinearGradient(x, y, x, y + height)
+  panelGradient.addColorStop(0, '#f8fcf8')
+  panelGradient.addColorStop(1, '#eef7ee')
+  ctx.fillStyle = panelGradient
+  ctx.fill()
+
+  const halo = ctx.createRadialGradient(x + width / 2, y + height / 2, 24, x + width / 2, y + height / 2, width / 2)
+  halo.addColorStop(0, 'rgba(76, 175, 80, 0.16)')
+  halo.addColorStop(1, 'rgba(76, 175, 80, 0)')
+  ctx.fillStyle = halo
+  roundRect(ctx, x, y, width, height, 28)
+  ctx.fill()
+
+  roundRect(ctx, x, y, width, height, 28)
+  ctx.strokeStyle = 'rgba(76, 175, 80, 0.10)'
+  ctx.lineWidth = 1
+  ctx.stroke()
+
   if (hero.image) {
     try {
-      const image = await loadImage(hero.image)
-      const scale = Math.min(width / image.width, height / image.height)
-      const drawWidth = image.width * scale
-      const drawHeight = image.height * scale
-      const drawX = x + (width - drawWidth) / 2
-      const drawY = y + (height - drawHeight) / 2
-      ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight)
-      return true
+      const image = await resolveImage(hero.image)
+      if (image) {
+        clipRoundRect(ctx, x, y, width, height, 28)
+        try {
+          const scale = Math.min((width * 0.82) / image.width, (height * 0.82) / image.height)
+          const drawWidth = image.width * scale
+          const drawHeight = image.height * scale
+          const drawX = x + (width - drawWidth) / 2
+          const drawY = y + (height - drawHeight) / 2 + 4
+          ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight)
+        } finally {
+          ctx.restore()
+        }
+        return true
+      }
     } catch (error) {
       console.warn('Failed to draw hero image:', error)
     }
   }
+
+  ctx.fillStyle = PALETTE.primary
+  ctx.font = `800 26px ${FONT}`
+  ctx.textAlign = 'center'
+  ctx.fillText(formatCode(hero.code), x + width / 2, y + height / 2 + 8)
   return false
 }
 
-/* ---- 绘制标签 ---- */
+/* ---- 文本区块 ---- */
+
+function drawQuoteCard(ctx, text, x, y, width) {
+  const lines = clampLines(text, 15, 2)
+  const lineHeight = 30
+  const height = Math.max(80, lines.length * lineHeight + 30)
+
+  roundRect(ctx, x, y, width, height, 18)
+  ctx.fillStyle = PALETTE.primarySurface
+  ctx.fill()
+
+  ctx.fillStyle = PALETTE.primary
+  ctx.fillRect(x, y + 16, 4, height - 32)
+
+  ctx.fillStyle = PALETTE.textSecondary
+  ctx.font = `600 24px ${FONT}`
+  ctx.textAlign = 'left'
+  lines.forEach((line, index) => {
+    ctx.fillText(line, x + 22, y + 34 + index * lineHeight)
+  })
+
+  return y + height
+}
 
 function drawTags(ctx, tags, centerX, y, maxWidth) {
-  if (!tags || tags.length === 0) return y
+  if (!tags.length) return y
 
-  ctx.font = `700 22px ${FONT}`
-  const tagHeight = 40
-  const tagPadding = 18
-  const tagGap = 10
-
-  const items = tags.slice(0, 6).map((tag) => {
-    const text = typeof tag === 'string' ? tag : (tag.text || '')
-    const textWidth = ctx.measureText(text).width
-    return { text, width: textWidth + tagPadding * 2 }
-  })
+  ctx.font = `700 18px ${FONT}`
+  const tagHeight = 34
+  const gap = 10
+  const paddingX = 16
 
   const rows = []
-  let currentRow = []
-  let currentRowWidth = 0
+  let row = []
+  let rowWidth = 0
 
-  items.forEach((item) => {
-    if (currentRow.length > 0 && currentRowWidth + item.width + tagGap > maxWidth) {
-      rows.push(currentRow)
-      currentRow = [item]
-      currentRowWidth = item.width
-    } else {
-      currentRow.push(item)
-      currentRowWidth += (currentRow.length > 1 ? tagGap : 0) + item.width
+  tags.forEach((text) => {
+    const safeText = text.length > 8 ? `${text.slice(0, 8)}...` : text
+    const width = ctx.measureText(safeText).width + paddingX * 2
+
+    if (row.length > 0 && rowWidth + width + gap > maxWidth) {
+      rows.push(row)
+      row = [{ text: safeText, width }]
+      rowWidth = width
+      return
     }
+
+    row.push({ text: safeText, width })
+    rowWidth += (row.length > 1 ? gap : 0) + width
   })
-  if (currentRow.length > 0) rows.push(currentRow)
+
+  if (row.length > 0) rows.push(row)
 
   let currentY = y
+  rows.slice(0, 2).forEach((items) => {
+    const totalWidth = items.reduce((sum, item, index) => sum + item.width + (index > 0 ? gap : 0), 0)
+    let currentX = centerX - totalWidth / 2
 
-  rows.forEach((row) => {
-    const rowWidth = row.reduce((sum, item, i) => sum + item.width + (i > 0 ? tagGap : 0), 0)
-    let startX = centerX - rowWidth / 2
-
-    row.forEach((item) => {
-      roundRect(ctx, startX, currentY, item.width, tagHeight, tagHeight / 2)
+    items.forEach((item) => {
+      roundRect(ctx, currentX, currentY, item.width, tagHeight, tagHeight / 2)
       ctx.fillStyle = PALETTE.tagBg
       ctx.fill()
-      roundRect(ctx, startX, currentY, item.width, tagHeight, tagHeight / 2)
+      roundRect(ctx, currentX, currentY, item.width, tagHeight, tagHeight / 2)
       ctx.strokeStyle = PALETTE.tagBorder
       ctx.lineWidth = 1
       ctx.stroke()
 
-      ctx.fillStyle = PALETTE.tagText
+      ctx.fillStyle = PALETTE.primaryDark
       ctx.textAlign = 'center'
-      ctx.fillText(item.text, startX + item.width / 2, currentY + tagHeight / 2 + 8)
-
-      startX += item.width + tagGap
+      ctx.fillText(item.text, currentX + item.width / 2, currentY + 22)
+      currentX += item.width + gap
     })
 
-    currentY += tagHeight + 12
+    currentY += tagHeight + 10
   })
 
   return currentY
 }
 
-/* ---- 绘制维度条形图 ---- */
+function drawComparisonPill(ctx, comparison, centerX, y) {
+  if (!comparison) return y
 
-function drawDimensionBars(ctx, dimensions, x, y, width, maxItems = 6) {
-  if (!dimensions || dimensions.length === 0) return y
+  const title = comparison.title.length > 10 ? `${comparison.title.slice(0, 10)}...` : comparison.title
+  const text = `常规命中 ${title}`
 
-  const items = dimensions.slice(0, maxItems)
-  const barHeight = 8
-  const rowHeight = 44
-  const barMarginTop = 6
+  ctx.font = `700 17px ${FONT}`
+  const width = ctx.measureText(text).width + 40
+  const pillX = centerX - width / 2
 
-  ctx.textAlign = 'left'
+  roundRect(ctx, pillX, y, width, 34, 17)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.92)'
+  ctx.fill()
+  roundRect(ctx, pillX, y, width, 34, 17)
+  ctx.strokeStyle = 'rgba(76, 175, 80, 0.16)'
+  ctx.lineWidth = 1
+  ctx.stroke()
 
-  items.forEach((item, index) => {
-    const rowY = y + index * rowHeight
+  ctx.fillStyle = PALETTE.textSecondary
+  ctx.textAlign = 'center'
+  ctx.fillText(text, centerX, y + 22)
+  return y + 46
+}
 
-    ctx.fillStyle = PALETTE.textSecondary
-    ctx.font = `600 20px ${FONT}`
-    ctx.fillText(item.label || item.id, x, rowY + 16)
+function drawDimensionGrid(ctx, dimensions, x, y, width) {
+  if (!dimensions.length) return y
 
-    ctx.fillStyle = PALETTE.primaryLight
-    ctx.font = `700 20px ${FONT}`
-    ctx.textAlign = 'right'
-    ctx.fillText(item.levelCode || '', x + width, rowY + 16)
+  const gap = 12
+  const columns = 2
+  const cardWidth = (width - gap) / columns
+  const cardHeight = 74
+
+  dimensions.forEach((item, index) => {
+    const column = index % columns
+    const row = Math.floor(index / columns)
+    const cardX = x + column * (cardWidth + gap)
+    const cardY = y + row * (cardHeight + gap)
+
+    roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 18)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
+    ctx.fill()
+    roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 18)
+    ctx.strokeStyle = 'rgba(76, 175, 80, 0.12)'
+    ctx.lineWidth = 1
+    ctx.stroke()
+
     ctx.textAlign = 'left'
+    ctx.fillStyle = PALETTE.textSecondary
+    ctx.font = `600 16px ${FONT}`
+    const label = item.label.length > 8 ? `${item.label.slice(0, 8)}...` : item.label
+    ctx.fillText(label, cardX + 14, cardY + 24)
 
-    const barY = rowY + 16 + barMarginTop
-    roundRect(ctx, x, barY, width, barHeight, barHeight / 2)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'
+    ctx.textAlign = 'right'
+    ctx.fillStyle = PALETTE.primary
+    ctx.font = `800 16px ${FONT}`
+    ctx.fillText(item.levelCode || '', cardX + cardWidth - 14, cardY + 24)
+
+    const barX = cardX + 14
+    const barY = cardY + 42
+    const barWidth = cardWidth - 28
+    roundRect(ctx, barX, barY, barWidth, 8, 4)
+    ctx.fillStyle = PALETTE.barBg
     ctx.fill()
 
-    const fillWidth = Math.max(barHeight, (item.percentage / 100) * width)
-    const barGrad = ctx.createLinearGradient(x, barY, x + fillWidth, barY)
-    barGrad.addColorStop(0, PALETTE.primaryLight)
-    barGrad.addColorStop(1, PALETTE.primary)
-    roundRect(ctx, x, barY, fillWidth, barHeight, barHeight / 2)
-    ctx.fillStyle = barGrad
+    const fillWidth = Math.max(10, (Number(item.percentage ?? 0) / 100) * barWidth)
+    const fillGradient = ctx.createLinearGradient(barX, barY, barX + fillWidth, barY)
+    fillGradient.addColorStop(0, PALETTE.primaryLight)
+    fillGradient.addColorStop(1, PALETTE.primary)
+    roundRect(ctx, barX, barY, fillWidth, 8, 4)
+    ctx.fillStyle = fillGradient
     ctx.fill()
+
+    ctx.textAlign = 'left'
+    ctx.fillStyle = PALETTE.textMuted
+    ctx.font = `500 13px ${FONT}`
+    ctx.fillText(`${Math.round(Number(item.percentage ?? 0))}%`, barX, cardY + 64)
   })
 
-  return y + items.length * rowHeight + 12
+  return y + Math.ceil(dimensions.length / columns) * (cardHeight + gap) - gap
 }
 
 /* ---- 主生成函数 ---- */
 
 export async function generateShareImage(result) {
-  const { hero, share, sections } = result
+  const { hero, share } = result
+  const tags = getHighlightTags(result, 3)
+  const dimensions = getHighlightDimensions(result, 4)
+  const comparison = getPosterComparison(result)
+  const quote = getPosterQuote(result)
 
   const dpr = 2
-  const width = 750
-  const height = 1334
+  const width = 720
+  const height = 900
 
   const canvas = document.createElement('canvas')
   canvas.width = width * dpr
@@ -215,108 +354,66 @@ export async function generateShareImage(result) {
 
   drawBackground(ctx, width, height)
 
-  const cardX = 32
-  const cardY = 32
-  const cardW = width - 64
-  const cardH = height - 64
-  drawCardBackground(ctx, cardX, cardY, cardW, cardH, 24)
+  const cardX = 26
+  const cardY = 26
+  const cardW = width - 52
+  const cardH = height - 52
+  drawCardBackground(ctx, cardX, cardY, cardW, cardH, 30)
 
-  let y = cardY + 50
+  let y = cardY + 42
 
-  // Header text
   ctx.textAlign = 'center'
   ctx.fillStyle = PALETTE.textMuted
-  ctx.font = `500 26px ${FONT}`
-  ctx.fillText('你的人格类型是：', width / 2, y)
-  y += 50
+  ctx.font = `600 18px ${FONT}`
+  ctx.fillText('你的人格类型是', width / 2, y)
+  y += 24
 
-  // Hero image
-  const panelW = cardW * 0.48
-  const panelH = panelW * (4 / 3)
-  const panelX = (width - panelW) / 2
-  const hasImage = await drawHeroPanel(ctx, hero, panelX, y, panelW, panelH)
-  if (hasImage) {
-    y += panelH + 36
-  } else {
-    y += 20
-  }
+  await drawHeroPanel(ctx, hero, width / 2 - 130, y, 260, 220)
+  y += 250
 
-  // Title
-  ctx.textAlign = 'center'
   ctx.fillStyle = PALETTE.text
-  ctx.font = `900 72px ${FONT}`
+  ctx.font = `900 74px ${FONT}`
   ctx.fillText(hero.title || '', width / 2, y)
   y += 48
 
-  // Code
   ctx.fillStyle = PALETTE.primary
-  ctx.font = `800 44px ${FONT}`
+  ctx.font = `800 40px ${FONT}`
   ctx.fillText(formatCode(hero.code), width / 2, y)
-  y += 40
+  y += 18
 
-  // Tags
-  const tagListSection = sections.find((s) => s.type === 'tag-list')
-  if (tagListSection && tagListSection.items?.length > 0) {
-    y += 8
-    const tagTexts = tagListSection.items.slice(0, 6)
-    y = drawTags(ctx, tagTexts, width / 2, y, cardW - 80)
-    y += 4
+  y = drawComparisonPill(ctx, comparison, width / 2, y)
+
+  if (quote) {
+    y += 10
+    y = drawQuoteCard(ctx, quote, cardX + 44, y, cardW - 88)
   }
 
-  // Badge / quote
-  if (hero.badge) {
-    const badgeX = cardX + 48
-    const badgeW = cardW - 96
-    const lines = toLines(hero.badge, 26)
-    const lineH = 34
-    const badgeH = Math.max(60, lines.length * lineH + 28)
+  y += 18
+  y = drawTags(ctx, tags, width / 2, y, cardW - 96)
 
-    roundRect(ctx, badgeX, y, badgeW, badgeH, 12)
-    ctx.fillStyle = PALETTE.primarySurface
-    ctx.fill()
+  y += 8
+  y = drawDimensionGrid(ctx, dimensions, cardX + 40, y, cardW - 80)
 
-    ctx.fillStyle = PALETTE.primary
-    ctx.fillRect(badgeX, y + 14, 3, badgeH - 28)
-
-    ctx.fillStyle = PALETTE.textSecondary
-    ctx.font = `500 24px ${FONT}`
-    ctx.textAlign = 'left'
-    lines.forEach((line, i) => {
-      ctx.fillText(line, badgeX + 20, y + 32 + i * lineH)
-    })
-
-    y += badgeH + 24
-  }
-
-  // Top dimensions (condensed)
-  const dimListSection = sections.find((s) => s.type === 'dimension-list')
-  if (dimListSection && dimListSection.items?.length > 0) {
-    const remainingSpace = (cardY + cardH - 160) - y
-    if (remainingSpace > 220) {
-      const maxItems = remainingSpace > 360 ? 6 : 4
-      y = drawDimensionBars(ctx, dimListSection.items, cardX + 48, y, cardW - 96, maxItems)
-    }
-  }
-
-  // Footer
-  const footerY = cardY + cardH - 130
+  const footerY = cardY + cardH - 112
 
   ctx.strokeStyle = PALETTE.divider
   ctx.lineWidth = 1
   ctx.beginPath()
-  ctx.moveTo(cardX + 40, footerY)
-  ctx.lineTo(cardX + cardW - 40, footerY)
+  ctx.moveTo(cardX + 32, footerY)
+  ctx.lineTo(cardX + cardW - 32, footerY)
   ctx.stroke()
 
   try {
     const qrUrl = window.location.href.split('?')[0]
     const qrDataUrl = await QRCode.toDataURL(qrUrl, {
-      width: 120,
+      width: 110,
       margin: 1,
-      color: { dark: '#1a1a1a', light: '#ffffff' },
+      color: { dark: '#141414', light: '#ffffff' },
     })
-    const qrImage = await loadImage(qrDataUrl)
-    ctx.drawImage(qrImage, cardX + 44, footerY + 24, 88, 88)
+    const qrImage = await resolveImage(qrDataUrl)
+    if (qrImage) {
+      ctx.drawImage(qrImage, cardX + 38, footerY + 22, 72, 72)
+    }
   } catch (err) {
     console.error('Failed to generate QR code:', err)
   }
@@ -324,11 +421,11 @@ export async function generateShareImage(result) {
   ctx.textAlign = 'left'
   ctx.fillStyle = PALETTE.text
   ctx.font = `700 24px ${FONT}`
-  ctx.fillText('扫码测测你是什么型', cardX + 152, footerY + 58)
+  ctx.fillText('扫码测测你是什么型', cardX + 128, footerY + 50)
 
   ctx.fillStyle = PALETTE.textMuted
-  ctx.font = `500 20px ${FONT}`
-  ctx.fillText('GBTI · 股民人格测试', cardX + 152, footerY + 90)
+  ctx.font = `600 18px ${FONT}`
+  ctx.fillText('GBTI · 股民人格测试', cardX + 128, footerY + 80)
 
   const dataUrl = canvas.toDataURL('image/png', 1.0)
 

@@ -1,4 +1,5 @@
 import { createQuizView } from './quiz.js'
+import { preloadImageWithTimeout, preloadImages } from './image-cache.js'
 import { createNoopResultReporter } from './reporters/index.js'
 import { createResultView } from './result.js'
 import { createScorerRegistry } from './scorers/index.js'
@@ -25,6 +26,15 @@ function buildDurationLabel(pack) {
 function clearContainer(element) {
   if (!element) return
   element.innerHTML = ''
+}
+
+function scheduleIdle(callback, timeout = 900) {
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(callback, { timeout })
+    return
+  }
+
+  window.setTimeout(callback, 180)
 }
 
 /* ---- Toast 提示 ---- */
@@ -218,7 +228,7 @@ function renderSpotlight(container, pack, codes = []) {
     card.className = 'info-card spotlight-card'
 
     const imageHtml = outcome.image
-      ? `<img class="spotlight-image" src="${outcome.image}" alt="${outcome.alias || outcome.code}" loading="lazy" />`
+      ? `<img class="spotlight-image" src="${outcome.image}" alt="${outcome.alias || outcome.code}" loading="lazy" decoding="async" fetchpriority="low" />`
       : `<div class="spotlight-placeholder">${outcome.code}</div>`
 
     card.innerHTML = `
@@ -295,6 +305,7 @@ export function createAppController({
     if (!target) return
 
     target.classList.add('active')
+    document.body.dataset.page = name
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -363,6 +374,19 @@ export function createAppController({
     if (els.introSpotlightSection) {
       els.introSpotlightSection.hidden = spotlightCodes.length === 0
     }
+
+    const spotlightImages = spotlightCodes
+      .map((code) => pack.outcomes.find((outcome) => outcome.code === code)?.image)
+      .filter(Boolean)
+
+    if (spotlightImages.length > 0) {
+      scheduleIdle(() => {
+        void preloadImages(spotlightImages, {
+          fetchPriority: 'low',
+          decoding: 'async',
+        })
+      })
+    }
   }
 
   function showLoadError(error) {
@@ -427,9 +451,16 @@ export function createAppController({
       const scorer = scorerRegistry.get(pack.scorerId)
 
       latestResult = scorer.score({ answers, pack, flowState })
+      const heroImageReady = latestResult?.hero?.image
+        ? preloadImageWithTimeout(latestResult.hero.image, 400, {
+          fetchPriority: 'high',
+          decoding: 'async',
+        }).catch(() => null)
+        : Promise.resolve(null)
 
       // 2. 等待 loading 动画至少播放 2.5 秒（营造期待感）
       await new Promise((resolve) => setTimeout(resolve, 2500))
+      await heroImageReady
 
       resultView.render(latestResult, pack)
       stopLoadingAnimation(stopLoadingFn)
@@ -537,6 +568,7 @@ export function createAppController({
         margin: 1,
         color: { dark: '#1a1a1a', light: '#ffffff' },
       })
+      container.innerHTML = ''
       if (fallbackIcon) fallbackIcon.remove()
       container.appendChild(qrCanvas)
     } catch (err) {
