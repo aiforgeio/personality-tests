@@ -1,0 +1,151 @@
+{
+  "id": "gbti",
+  "scorerId": "dimension-pattern-matcher",
+  "questionsPath": "./questions.json",
+  "outcomesPath": "./outcomes.json",
+  "specialQuestionsPath": "./special-questions.json",
+  "dimensionsPath": "./dimensions.json",
+  "patternsPath": "./patterns.json",
+  "meta": {
+    "browserTitle": "GBTI 股民人格测试",
+    "description": "30 道题、15 个维度、16 种交易人格的趣味测试。",
+    "version": "2.0.0"
+  },
+  "display": {
+    "introEyebrow": "GBTI · 股民人格测试",
+    "introTitle": "测一测，你在股市里是「股神」还是「接盘侠」？",
+    "subtitle": "3 分钟快速评估你的交易风格与风险倾向，得到更清晰的投资行为画像。",
+    "statsLine": "30 道维度题 · 16 种交易人格 · 即测即出结果",
+    "estimatedDurationLabel": "预计 3-4 分钟",
+    "secondaryNote": "几分钟快速认识你的交易风格、风险偏好和操作习惯。",
+    "trustBadges": [
+      "完全免费",
+      "即测即看结果",
+      "无需登录"
+    ],
+    "benefits": [
+      {
+        "title": "题目接地气",
+        "text": "围绕追涨、止损、回撤、消息面等真实场景设计，不是空泛心理题。"
+      },
+      {
+        "title": "结果更有层次",
+        "text": "不只给你一个类型名，还会给出维度分布和命中理由，方便理解自己。"
+      },
+      {
+        "title": "娱乐但有启发",
+        "text": "轻松有梗的同时，帮你识别常见交易习惯，复盘时更容易抓住关键问题。"
+      }
+    ],
+    "spotlightCodes": [
+      "TEN_JQKA",
+      "DEFENDER_A",
+      "GURU"
+    ],
+    "author": "灵感来自小红书用户「拿住股票一百年不变」的创意。",
+    "disclaimer": "本测试仅供娱乐，不构成投资建议。请根据自身风险承受能力进行决策。",
+    "startButtonLabel": "立即开始测试",
+    "restartButtonLabel": "重新测试",
+    "downloadButtonLabel": "保存分享图片"
+  },
+  "flow": {
+    "mode": "conditional",
+    "shuffleQuestions": true,
+    "staticInsertions": [
+      {
+        "questionId": "margin_gate_q1",
+        "strategy": "random-slot",
+        "minIndex": 1
+      }
+    ]
+  },
+  "specialLogic": {
+    "gateQuestionId": "margin_gate_q1",
+    "gateValues": [
+      3
+    ],
+    "insertQuestionId": "margin_gate_q2",
+    "insertAfterQuestionId": "margin_gate_q1",
+    "triggerQuestionId": "margin_gate_q2",
+    "triggerValue": 2,
+    "hiddenTypeCode": "TEN_JQKA",
+    "fallbackTypeCode": "WATCHER",
+    "similarityFloor": 55
+  },
+  "assets": {
+    "posterMode": "image"
+  },
+  "resultTemplate": {
+    "sections": [
+      {
+        "id": "hero-art",
+        "type": "image-panel",
+        "group": "hero-top",
+        "card": true
+      },
+      {
+        "id": "hero-summary",
+        "type": "hero-summary",
+        "group": "hero-top",
+        "card": true
+      },
+      {
+        "id": "stats",
+        "type": "stats-inline",
+        "source": "meta.stats"
+      },
+      {
+        "id": "tags",
+        "type": "tag-list",
+        "title": "人格标签",
+        "source": "hero.tags",
+        "card": true
+      },
+      {
+        "id": "reasons",
+        "type": "bullet-list",
+        "title": "命中理由",
+        "source": "hero.reasons",
+        "card": true
+      },
+      {
+        "id": "scenes",
+        "type": "bullet-list",
+        "title": "典型场景",
+        "source": "hero.scenes",
+        "card": true
+      },
+      {
+        "id": "mantras",
+        "type": "bullet-list",
+        "title": "你常挂嘴边",
+        "source": "hero.mantras",
+        "card": true
+      },
+      {
+        "id": "tips",
+        "type": "bullet-list",
+        "title": "给你的提醒",
+        "source": "hero.tips",
+        "card": true
+      },
+      {
+        "id": "dimensions",
+        "type": "dimension-list",
+        "title": "十五维度分布",
+        "source": "dimensions"
+      }
+    ],
+    "disclaimer": {
+      "source": "pack.display.disclaimer"
+    }
+  },
+  "shareConfig": {
+    "title": "GBTI 股民人格测试",
+    "footer": "GBTI · 股民人格测试 · 仅供娱乐",
+    "rankingTitle": "常规人格 TOP 3",
+    "rankingLimit": 3,
+    "badgeLabel": "匹配度",
+    "filenamePrefix": "GBTI"
+  }
+}

@@ -2,90 +2,251 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GBTI 人格测试</title>
-  <meta name="description" content="20 道题，扒光你的交易人格。基于公开前端快照还原的 GBTI 静态测试页。" />
+  <!-- 移动端优先，禁止用户缩放，适配刘海屏 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>GBTI 股民人格测试</title>
+  <meta name="description" content="30 道题、15 个维度、16 种交易人格的趣味测试。3 分钟快速评估你的交易风格与风险倾向。" />
+
+  <!-- OG Meta Tags for WeChat / Social sharing -->
+  <meta property="og:title" content="GBTI 股民人格测试" />
+  <meta property="og:description" content="30 道题、15 个维度、16 种交易人格。测一测你在股市里是「股神」还是「接盘侠」？" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/og-image.png" />
+  <meta property="og:site_name" content="GBTI 股民人格测试" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="GBTI 股民人格测试" />
+  <meta name="twitter:description" content="30 道题、15 个维度、16 种交易人格。" />
+
+  <!-- Apple / iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GBTI 测试" />
+  <meta name="format-detection" content="telephone=no" />
+
+  <!-- Theme color for browser chrome -->
+  <meta name="theme-color" content="#0f0c29" />
+
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>" />
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
   <div id="app">
-    <section id="page-intro" class="page active">
-      <div class="card intro-card">
-        <div class="intro-eyebrow">GBTI · 股市交易人格测试</div>
-        <h1 class="intro-title">20 道题，<br />扒光你的交易人格。</h1>
-        <p class="intro-subtitle" id="intro-subtitle"></p>
-        <button id="btn-start" class="btn btn-primary">开始测试</button>
-        <p class="intro-credit" id="intro-credit"></p>
-        <p class="intro-note" id="intro-note"></p>
+
+    <!-- ===== 页面一：欢迎首页 ===== -->
+    <section id="page-intro" class="page active" aria-label="欢迎页">
+      <!-- 背景装饰粒子 -->
+      <div class="bg-orbs" aria-hidden="true">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+      </div>
+
+      <div class="intro-shell">
+        <!-- 主卡片 -->
+        <div class="card intro-card glass-card">
+          <div class="intro-eyebrow" id="intro-eyebrow"></div>
+          <h1 class="intro-title" id="intro-title"></h1>
+          <p class="intro-subtitle" id="intro-subtitle"></p>
+
+          <div class="intro-stats-badge" id="intro-stats-line"></div>
+
+          <p class="intro-secondary-note" id="intro-secondary-note"></p>
+
+          <!-- 社交证明 -->
+          <div class="intro-social-proof">
+            <span class="social-proof-icon">🔥</span>
+            <span class="social-proof-text">已有 <strong>12,847</strong> 人完成测试</span>
+          </div>
+
+          <div class="intro-actions">
+            <button id="btn-start" class="btn btn-primary btn-pulse btn-large">
+              <span class="btn-text">开始测试</span>
+              <span class="btn-icon">→</span>
+            </button>
+          </div>
+
+          <div class="intro-trust" id="intro-trust"></div>
+
+          <p class="intro-disclaimer">结果仅供娱乐参考，不构成投资建议</p>
+        </div>
+
+        <!-- 数据卡片组 -->
+        <div class="intro-grid intro-facts" id="intro-facts"></div>
+
+        <!-- 特点说明 -->
+        <div class="intro-grid intro-benefits" id="intro-benefits"></div>
+
+        <!-- 示例结果展示 -->
+        <div class="intro-spotlight-section" id="intro-spotlight-section">
+          <div class="section-label">示例结果预览</div>
+          <div class="intro-grid intro-spotlight" id="intro-spotlight"></div>
+        </div>
+
+        <div class="intro-footer">
+          <p class="intro-credit" id="intro-credit"></p>
+          <p class="intro-note" id="intro-note"></p>
+        </div>
       </div>
     </section>
 
-    <section id="page-quiz" class="page">
-      <div class="card quiz-card">
-        <div class="progress-bar">
-          <div class="progress-fill" id="progress-fill"></div>
+    <!-- ===== 页面二：答题页面 ===== -->
+    <section id="page-quiz" class="page" aria-label="答题页">
+      <div class="quiz-wrapper">
+        <!-- 顶部进度区域 -->
+        <div class="quiz-header">
+          <div class="progress-bar" role="progressbar" aria-label="答题进度">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="progress-info">
+            <span class="progress-text" id="progress-text">0 / 30</span>
+            <span class="progress-percent" id="progress-percent">0%</span>
+          </div>
         </div>
-        <div class="progress-text" id="progress-text">0 / 20</div>
-        <div class="question-kicker" id="question-kicker">第 1 题</div>
-        <div class="question-area">
-          <p class="question-caption" id="question-caption"></p>
-          <p class="question-text" id="question-text"></p>
+
+        <!-- 题目卡片（支持手势滑动） -->
+        <div class="card quiz-card glass-card" id="quiz-card">
+          <div class="question-kicker" id="question-kicker">第 1 题</div>
+          <div class="question-area">
+            <p class="question-caption" id="question-caption"></p>
+            <p class="question-text" id="question-text"></p>
+            <p class="question-description" id="question-description"></p>
+          </div>
+          <div class="options" id="options" role="group" aria-label="选项"></div>
+
+          <!-- 底部导航（仅保留上一题按钮） -->
+          <div class="quiz-footer" id="quiz-footer">
+            <div class="question-mode-note" id="question-mode-note"></div>
+            <div class="quiz-nav">
+              <button id="btn-prev-question" class="btn btn-ghost btn-back" aria-label="返回上一题">
+                <span class="btn-back-icon">←</span>
+                <span>上一题</span>
+              </button>
+              <!-- 选中即自动跳转，不需要下一题按钮 -->
+              <div class="quiz-hint">选择即跳转</div>
+            </div>
+          </div>
         </div>
-        <div class="options" id="options"></div>
+
+        <!-- 手势提示（首次显示） -->
+        <div class="swipe-hint" id="swipe-hint" aria-hidden="true">
+          <span>← 右滑返回上一题</span>
+        </div>
       </div>
     </section>
 
-    <section id="page-result" class="page">
-      <div class="card result-card">
-        <div class="result-kicker">你的交易人格</div>
-        <div class="result-name" id="result-name"></div>
-        <div class="result-code" id="result-code"></div>
-        <div class="result-english" id="result-english"></div>
-        <div class="result-badge" id="result-badge"></div>
-        <div class="result-intro" id="result-intro"></div>
-        <div class="result-desc" id="result-desc"></div>
-        <div class="result-note" id="result-note"></div>
-
-        <h3 class="section-title">14 人格得分</h3>
-        <div class="score-bars" id="score-bars"></div>
-
-        <div class="result-grid">
-          <section class="info-card">
-            <h3 class="section-title compact">人格标签</h3>
-            <div class="tag-list" id="tag-list"></div>
-          </section>
-          <section class="info-card">
-            <h3 class="section-title compact">你常挂嘴边</h3>
-            <div class="quote-list" id="quote-list"></div>
-          </section>
+    <!-- ===== 页面三：结果生成过渡页 ===== -->
+    <section id="page-loading" class="page" aria-label="分析中" aria-live="polite">
+      <div class="loading-container">
+        <!-- 动画主体 -->
+        <div class="loading-animation" aria-hidden="true">
+          <!-- 外层轨道 -->
+          <div class="loading-orbit loading-orbit-outer">
+            <div class="loading-planet loading-planet-1"></div>
+          </div>
+          <!-- 中层轨道 -->
+          <div class="loading-orbit loading-orbit-mid">
+            <div class="loading-planet loading-planet-2"></div>
+          </div>
+          <!-- 内层核心 -->
+          <div class="loading-core">
+            <span class="loading-core-icon">📊</span>
+          </div>
         </div>
 
-        <div class="result-grid">
-          <section class="info-card">
-            <h3 class="section-title compact">你的特征</h3>
-            <ul class="bullet-list" id="trait-list"></ul>
-          </section>
-          <section class="info-card">
-            <h3 class="section-title compact">作者建议</h3>
-            <ul class="bullet-list" id="advice-list"></ul>
-          </section>
+        <!-- 滚动文字提示 -->
+        <div class="loading-messages" id="loading-messages">
+          <p class="loading-message" data-index="0">正在分析你的性格特征...</p>
+          <p class="loading-message" data-index="1">正在匹配交易人格类型...</p>
+          <p class="loading-message" data-index="2">正在计算维度分布...</p>
+          <p class="loading-message" data-index="3">即将揭晓你的专属结果...</p>
         </div>
 
-        <div class="result-top5">
-          <h3 class="section-title">最佳匹配 TOP 5</h3>
-          <div id="top-list"></div>
+        <div class="loading-progress-bar">
+          <div class="loading-progress-fill" id="loading-progress-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 页面四：结果页 ===== -->
+    <section id="page-result" class="page" aria-label="测试结果">
+      <div class="result-wrapper">
+
+        <!-- 结果分享卡片区域（截图核心区域） -->
+        <div class="result-share-card" id="result-share-card">
+          <!-- 卡片内装饰 -->
+          <div class="share-card-orbs" aria-hidden="true">
+            <div class="share-orb share-orb-1"></div>
+            <div class="share-orb share-orb-2"></div>
+          </div>
+
+          <!-- 卡片顶部标签 -->
+          <div class="share-card-header">
+            <span class="share-card-badge" id="share-card-badge">GBTI · 股民人格测试</span>
+          </div>
+
+          <!-- 英雄区域 -->
+          <div class="result-hero-grid" id="result-hero-grid">
+            <!-- 图片/艺术卡片 -->
+            <div class="result-hero-image-wrap" id="result-hero-image-wrap"></div>
+            <!-- 文字摘要 -->
+            <div class="result-hero-summary" id="result-hero-summary"></div>
+          </div>
+
+          <!-- 标签区域 -->
+          <div class="result-tags-section" id="result-tags-section"></div>
+
+          <!-- 维度图表 -->
+          <div class="result-chart-section" id="result-chart-section">
+            <div class="chart-title">十五维度分布</div>
+            <div class="dimension-chart" id="dimension-chart"></div>
+          </div>
+
+          <!-- 卡片底部 -->
+          <div class="share-card-footer">
+            <div class="share-card-qr" aria-label="扫码测试">
+              <div class="qr-placeholder">
+                <span class="qr-icon">📱</span>
+              </div>
+              <span class="qr-label">扫码测测你是什么型</span>
+            </div>
+            <div class="share-card-watermark">GBTI · 股民人格测试</div>
+          </div>
         </div>
 
+        <!-- 详细内容区域（卡片下方） -->
+        <div class="result-detail-sections" id="result-detail-sections"></div>
+
+        <!-- 免责声明 -->
         <div class="disclaimer" id="disclaimer"></div>
 
+        <!-- 操作按钮区域 -->
         <div class="result-actions">
-          <button id="btn-download" class="btn btn-primary">保存分享图片</button>
-          <button id="btn-restart" class="btn btn-secondary">重新测试</button>
+          <button id="btn-download" class="btn btn-primary btn-action">
+            <span class="btn-icon-left">🖼️</span>
+            <span>保存结果图片</span>
+          </button>
+          <button id="btn-share" class="btn btn-secondary btn-action">
+            <span class="btn-icon-left">🔗</span>
+            <span>分享给好友</span>
+          </button>
+          <button id="btn-restart" class="btn btn-ghost btn-action">
+            <span class="btn-icon-left">🔄</span>
+            <span>再测一次</span>
+          </button>
         </div>
+
       </div>
     </section>
-  </div>
+
+  </div><!-- /#app -->
+
+  <!-- Confetti 庆祝动画容器 -->
+  <div id="confetti-container" aria-hidden="true"></div>
+
+  <!-- Toast 提示 -->
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 
   <script type="module" src="/src/main.js"></script>
 </body>

@@ -1,0 +1,782 @@
+[
+  {
+    "id": "q1",
+    "prompt": "账户单日波动超过 3% 时，你通常？",
+    "description": "",
+    "caption": "",
+    "dim": "R1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "心跳加速，立刻想减仓。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "有点慌，但还能扛。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "正常波动，先看结构再说。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q2",
+    "prompt": "面对高波动板块，你更像：",
+    "description": "",
+    "caption": "",
+    "dim": "R1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "只看不买，远离心脏骤停。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "小仓位试错一下。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "波动越大越兴奋。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q3",
+    "prompt": "持仓回撤 15% 时，你会？",
+    "description": "",
+    "caption": "",
+    "dim": "R2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "睡不着，想尽快离场。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "边看边等，给点时间。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "若逻辑在，回撤可接受。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q4",
+    "prompt": "对“浮亏不是亏”这句话，你更接近：",
+    "description": "",
+    "caption": "",
+    "dim": "R2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "不同意，亏就是亏。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "看周期和仓位。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "同意，波动是过程。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q5",
+    "prompt": "你对融资融券/杠杆工具的态度是？",
+    "description": "",
+    "caption": "",
+    "dim": "R3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "尽量不用。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "有机会会少量用。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "会，资金效率第一。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q6",
+    "prompt": "你眼中的“满仓”是：",
+    "description": "",
+    "caption": "",
+    "dim": "R3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "风险过高，不常用。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "只在特定机会使用。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "常态，子弹打光才叫上场。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q7",
+    "prompt": "你的下单频率通常是：",
+    "description": "",
+    "caption": "",
+    "dim": "T1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "很少交易，主要观察。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "每周会动几次。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "几乎天天有操作。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q8",
+    "prompt": "看到盘中异动时，你会：",
+    "description": "",
+    "caption": "",
+    "dim": "T1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "记录但不追。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "小仓位试一笔。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "马上上车，先手最重要。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q9",
+    "prompt": "你更偏好的持仓周期是：",
+    "description": "",
+    "caption": "",
+    "dim": "T2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "短线快进快出。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "中线，几周到几月。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "长线，愿意长期持有。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q10",
+    "prompt": "买入后涨得不快，你一般会：",
+    "description": "",
+    "caption": "",
+    "dim": "T2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "很快换标的。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "再观察几天。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "只要逻辑没坏就耐心拿。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q11",
+    "prompt": "你是否严格执行交易计划？",
+    "description": "",
+    "caption": "",
+    "dim": "T3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "常被盘中情绪打断。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "大部分时间能执行。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "计划一旦写下就照做。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q12",
+    "prompt": "预设卖点到了但群里还在喊“继续冲”，你会？",
+    "description": "",
+    "caption": "",
+    "dim": "T3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "容易被带节奏，先等等。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "犹豫后执行一部分。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "按策略执行，不看情绪。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q13",
+    "prompt": "你做决策时，对财经新闻/群消息的依赖程度：",
+    "description": "",
+    "caption": "",
+    "dim": "I1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "不太依赖。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "会参考。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "非常依赖，实时盯消息。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q14",
+    "prompt": "看到“突发利好”时你的第一反应：",
+    "description": "",
+    "caption": "",
+    "dim": "I1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "先验证，不急下单。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "看盘口再定。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "先买再说，慢了就没了。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q15",
+    "prompt": "买入前你会自己看财报、估值或行业资料吗？",
+    "description": "",
+    "caption": "",
+    "dim": "I2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "很少，主要听别人观点。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "偶尔会看重点。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "会，形成自己的判断。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q16",
+    "prompt": "面对大V观点与你判断冲突时，你通常：",
+    "description": "",
+    "caption": "",
+    "dim": "I2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "倾向跟随大V。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "会重新比对。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "以自己体系为主。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q17",
+    "prompt": "你对“热门题材”的态度是：",
+    "description": "",
+    "caption": "",
+    "dim": "I3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "尽量回避，怕接最后一棒。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "看节奏参与一部分。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "有热度就想上车。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q18",
+    "prompt": "当新概念在社媒刷屏时，你会：",
+    "description": "",
+    "caption": "",
+    "dim": "I3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "先冷静几天。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "观察量价再说。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "马上找龙头标的。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q19",
+    "prompt": "连续两天亏损后，你的状态更像：",
+    "description": "",
+    "caption": "",
+    "dim": "M1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "情绪明显受影响。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "会烦，但能控制。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "照流程复盘，不情绪化。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q20",
+    "prompt": "盘中剧烈波动时，你能否按计划执行？",
+    "description": "",
+    "caption": "",
+    "dim": "M1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "经常临场变卦。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "偶尔会受影响。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "大体稳定，不乱改。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q21",
+    "prompt": "看到别人晒收益，你会：",
+    "description": "",
+    "caption": "",
+    "dim": "M2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "基本无感。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "会有点心动。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "立刻想找机会追上。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q22",
+    "prompt": "错过一段上涨后，你通常：",
+    "description": "",
+    "caption": "",
+    "dim": "M2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "接受错过，等下一次。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "纠结一下再决定。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "追，怕彻底踏空。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q23",
+    "prompt": "触发止损线后，你通常：",
+    "description": "",
+    "caption": "",
+    "dim": "M3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "很难下手止损。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "分批处理。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "果断执行，不恋战。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q24",
+    "prompt": "你对“扛一扛就回本”的看法：",
+    "description": "",
+    "caption": "",
+    "dim": "M3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "经常这么做。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "看标的质量。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "不赌回本，先控风险。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q25",
+    "prompt": "你通常怎么分配仓位？",
+    "description": "",
+    "caption": "",
+    "dim": "S1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "看感觉，一把梭。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "会做大致分配。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "有明确仓位与风险上限。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q26",
+    "prompt": "同一行业连续上涨时，你会：",
+    "description": "",
+    "caption": "",
+    "dim": "S1",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "集中重仓单一票。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "适度集中。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "分散并控制单票风险。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q27",
+    "prompt": "你会固定复盘交易吗？",
+    "description": "",
+    "caption": "",
+    "dim": "S2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "很少，过了就过了。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "偶尔复盘。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "有固定复盘节奏。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q28",
+    "prompt": "你是否记录自己的买卖理由和复盘结论？",
+    "description": "",
+    "caption": "",
+    "dim": "S2",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "基本不记。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "偶尔记。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "持续记录并回看。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q29",
+    "prompt": "你有成体系的交易规则吗？",
+    "description": "",
+    "caption": "",
+    "dim": "S3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "没有，凭盘感。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "有一点框架。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "有稳定规则并长期执行。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q30",
+    "prompt": "市场风格切换时，你会：",
+    "description": "",
+    "caption": "",
+    "dim": "S3",
+    "special": false,
+    "kind": "single",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "追着情绪跑，规则经常变。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "局部调整策略。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "在框架内调整，不破底层规则。",
+        "value": 3
+      }
+    ]
+  }
+]

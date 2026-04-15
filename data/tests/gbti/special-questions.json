@@ -1,0 +1,49 @@
+[
+  {
+    "id": "margin_gate_q1",
+    "prompt": "如果你非常看好某次行情，你会怎么配仓？",
+    "description": "",
+    "caption": "",
+    "dim": "",
+    "special": true,
+    "kind": "margin_gate",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "继续按计划分仓，不上头。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "提高仓位，但不加杠杆。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "满仓，必要时加杠杆。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "margin_gate_q2",
+    "prompt": "你对“梭哈”最真实的看法是？",
+    "description": "",
+    "caption": "",
+    "dim": "",
+    "special": true,
+    "kind": "all_in_trigger",
+    "options": [
+      {
+        "id": "option-1",
+        "label": "偶尔调侃，不会真干。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "行情对了就该重拳出击。",
+        "value": 2
+      }
+    ]
+  }
+]
