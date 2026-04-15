@@ -34,7 +34,6 @@ const PACK_SPECS = [
         { title: '娱乐但有启发', text: '轻松有梗的同时，帮你识别常见交易习惯，复盘时更容易抓住关键问题。' },
       ],
       spotlightCodes: ['TEN_JQKA', 'DEFENDER_A', 'GURU'],
-      author: '灵感来自小红书用户「拿住股票一百年不变」的创意。',
       disclaimer: '本测试仅供娱乐，不构成投资建议。请根据自身风险承受能力进行决策。',
       startButtonLabel: '立即开始测试',
       restartButtonLabel: '重新测试',
@@ -65,6 +64,7 @@ const PACK_SPECS = [
     },
     shareConfig: {
       title: 'GBTI 股民人格测试',
+      linkCopyText: '来测测你的股民人格类型',
       footer: 'GBTI · 股民人格测试 · 仅供娱乐',
       rankingTitle: '常规人格 TOP 3',
       rankingLimit: 3,
@@ -108,7 +108,6 @@ const PACK_SPECS = [
         { title: '维度分析更直观', text: '除了主人格，还能看到十五维度倾向，理解结果更完整。' },
       ],
       spotlightCodes: ['CTRL', 'DRUNK', 'HHHH'],
-      author: '灵感来源于网络流行的 SBTI 测试内容。',
       disclaimer: '本测试仅供娱乐，不构成任何现实评判、医疗建议、招聘依据或恋爱审判。',
       startButtonLabel: '开始测试',
       restartButtonLabel: '重新测试',
@@ -139,6 +138,7 @@ const PACK_SPECS = [
     },
     shareConfig: {
       title: 'SBTI 人格测试',
+      linkCopyText: '来测测你的抽象人格类型',
       footer: 'SBTI · 人格测试 · 仅供娱乐',
       rankingTitle: '常规人格 TOP 3',
       rankingLimit: 3,

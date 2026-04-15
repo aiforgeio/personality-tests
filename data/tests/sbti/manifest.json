@@ -42,7 +42,6 @@
       "DRUNK",
       "HHHH"
     ],
-    "author": "灵感来源于网络流行的 SBTI 测试内容。",
     "disclaimer": "本测试仅供娱乐，不构成任何现实评判、医疗建议、招聘依据或恋爱审判。",
     "startButtonLabel": "开始测试",
     "restartButtonLabel": "重新测试",
@@ -107,6 +106,7 @@
   },
   "shareConfig": {
     "title": "SBTI 人格测试",
+    "linkCopyText": "来测测你的抽象人格类型",
     "footer": "SBTI · 人格测试 · 仅供娱乐",
     "rankingTitle": "常规人格 TOP 3",
     "rankingLimit": 3,

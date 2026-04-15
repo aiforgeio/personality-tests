@@ -307,6 +307,10 @@ export function validatePackManifest(manifest) {
     assertPositiveInteger(manifest.shareConfig.rankingLimit, 'pack.shareConfig.rankingLimit must be a positive integer')
   }
 
+  if (manifest.shareConfig.linkCopyText != null) {
+    assertOptionalString(manifest.shareConfig.linkCopyText, 'pack.shareConfig.linkCopyText must be a string')
+  }
+
   return manifest
 }
 

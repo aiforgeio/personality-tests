@@ -4,7 +4,6 @@ import { createNoopResultReporter } from './reporters/index.js'
 import { createResultView } from './result.js'
 import { createScorerRegistry } from './scorers/index.js'
 import { createLocalTestPackSource } from './test-pack/source.js'
-import { formatCode } from './utils.js'
 
 /* ---- 工具函数 ---- */
 
@@ -21,6 +20,18 @@ function buildStatsLine(pack) {
 function buildDurationLabel(pack) {
   const minutes = Math.max(3, Math.round(pack.questions.length / 10))
   return `预计 ${minutes}-${minutes + 1} 分钟`
+}
+
+function resolveLinkShareCTA(pack) {
+  const custom = pack?.shareConfig?.linkCopyText
+  if (typeof custom === 'string' && custom.trim()) {
+    return custom.trim()
+  }
+  return '来测测你的人格类型'
+}
+
+function buildLinkShareText(pack, url) {
+  return `${resolveLinkShareCTA(pack)}：${url}`
 }
 
 function clearContainer(element) {
@@ -269,7 +280,6 @@ export function createAppController({
     introBenefits: document.getElementById('intro-benefits'),
     introSpotlight: document.getElementById('intro-spotlight'),
     introSpotlightSection: document.getElementById('intro-spotlight-section'),
-    introCredit: document.getElementById('intro-credit'),
     introNote: document.getElementById('intro-note'),
     startButton: document.getElementById('btn-start'),
     shareButton: document.getElementById('btn-share'),
@@ -332,7 +342,6 @@ export function createAppController({
     setText(els.introSubtitle, display.subtitle || '')
     setText(els.introStatsLine, display.statsLine || '')
     setText(els.introSecondaryNote, display.secondaryNote || '')
-    setText(els.introCredit, display.author || '')
     setText(els.introNote, display.disclaimer || '')
     renderTrustBadges(els.introTrust, display.trustBadges || [])
     renderBenefits(els.introBenefits, display.benefits || [])
@@ -584,19 +593,16 @@ export function createAppController({
     els.shareButton.addEventListener('click', () => {
       const url = window.location.href
       const title = activeManifest?.meta?.browserTitle || 'GBTI 股民人格测试'
-      const heroTitle = latestResult?.hero?.title || ''
-      const heroCode = latestResult?.hero?.code ? formatCode(latestResult.hero.code) : ''
-      const shareText = heroTitle
-        ? `我是「${heroTitle}」(${heroCode})！${latestResult?.hero?.badge || '快来测测你是什么人格'}`
-        : '测一测你在股市里是什么人格！'
+      const shareCTA = resolveLinkShareCTA(activePack)
+      const copyText = buildLinkShareText(activePack, url)
 
       if (navigator.share) {
-        navigator.share({ title, text: shareText, url }).catch(() => {})
+        navigator.share({ title, text: shareCTA, url }).catch(() => {})
         return
       }
 
       if (navigator.clipboard) {
-        navigator.clipboard.writeText(`${shareText} ${url}`).then(() => {
+        navigator.clipboard.writeText(copyText).then(() => {
           showToast('已复制到剪贴板，快去分享吧')
         }).catch(() => {
           showToast('请手动复制链接分享')

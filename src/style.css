@@ -467,7 +467,7 @@ body {
   padding-bottom: var(--space-md);
 }
 
-.intro-credit, .intro-note {
+.intro-note {
   margin: 4px 0;
   color: var(--text-dim);
   font-size: 0.74rem;

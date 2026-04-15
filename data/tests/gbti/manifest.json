@@ -42,7 +42,6 @@
       "DEFENDER_A",
       "GURU"
     ],
-    "author": "灵感来自小红书用户「拿住股票一百年不变」的创意。",
     "disclaimer": "本测试仅供娱乐，不构成投资建议。请根据自身风险承受能力进行决策。",
     "startButtonLabel": "立即开始测试",
     "restartButtonLabel": "重新测试",
@@ -142,6 +141,7 @@
   },
   "shareConfig": {
     "title": "GBTI 股民人格测试",
+    "linkCopyText": "来测测你的股民人格类型",
     "footer": "GBTI · 股民人格测试 · 仅供娱乐",
     "rankingTitle": "常规人格 TOP 3",
     "rankingLimit": 3,
