@@ -1,0 +1,795 @@
+[
+  {
+    "id": 1,
+    "prompt": "你刚卖掉的票，十分钟后突然直线拉板，你会？",
+    "caption": "先别解释，选第一反应。",
+    "options": [
+      {
+        "label": "追回去，哪怕像个笑话。",
+        "roast": "追顶本能。",
+        "effect": {
+          "TD_MASTER": 4,
+          "ALL_IN_GUY": 3,
+          "MIND_GOD": 2
+        }
+      },
+      {
+        "label": "截图发群里，假装早就看懂。",
+        "roast": "表演欲压过羞耻。",
+        "effect": {
+          "MIND_GOD": 4,
+          "JUICY_WONDER": 2,
+          "FUN_BOW_FATHER": 2
+        }
+      },
+      {
+        "label": "不看了，假装自己没卖。",
+        "roast": "逃避型温柔。",
+        "effect": {
+          "GOOD_FOUR": 4,
+          "CALL_BACK_FATHER": 2
+        }
+      },
+      {
+        "label": "默默骂一句，准备下一单。",
+        "roast": "嘴硬但还能活。",
+        "effect": {
+          "GREENER": 3,
+          "GROW_HERO": 2,
+          "DEFENDER_A": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "prompt": "热榜第一和群聊截图同时出现，你会？",
+    "caption": "这题看你到底是不是被热闹拐走的。",
+    "options": [
+      {
+        "label": "先上车，真假以后再说。",
+        "roast": "热榜型冲锋。",
+        "effect": {
+          "JEEP_MAN": 4,
+          "TEN_JQKA": 2,
+          "ALL_IN_GUY": 2
+        }
+      },
+      {
+        "label": "追问消息源，然后还是上。",
+        "roast": "做过形式审查。",
+        "effect": {
+          "JUICY_WONDER": 4,
+          "MIND_GOD": 2,
+          "TEN_JQKA": 1
+        }
+      },
+      {
+        "label": "先观察，等别人替你挨打。",
+        "roast": "躲在安全区。",
+        "effect": {
+          "DEFENDER_A": 3,
+          "GOOD_FOUR": 3
+        }
+      },
+      {
+        "label": "觉得大家都疯了，但也有点想。",
+        "roast": "理智被群聊围殴。",
+        "effect": {
+          "MIND_GOD": 3,
+          "GROW_HERO": 2,
+          "JEEP_MAN": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "prompt": "别人晒收益时，你最常见的表情包是？",
+    "caption": "别装，你肯定有固定反应。",
+    "options": [
+      {
+        "label": "\"我也行。\"然后开始上头。",
+        "roast": "被比较激活。",
+        "effect": {
+          "STOCK_GOD": 4,
+          "ALL_IN_GUY": 2,
+          "JEEP_MAN": 2
+        }
+      },
+      {
+        "label": "\"这肯定只晒红不晒绿。\"",
+        "roast": "嘴硬保命。",
+        "effect": {
+          "GROW_HERO": 4,
+          "GREENER": 2
+        }
+      },
+      {
+        "label": "\"我不看，我先研究指数。\"",
+        "roast": "体面撤退。",
+        "effect": {
+          "DEFENDER_A": 4,
+          "CALL_BACK_FATHER": 2
+        }
+      },
+      {
+        "label": "\"有点想跟。\"",
+        "roast": "FOMO 开始发热。",
+        "effect": {
+          "MIND_GOD": 3,
+          "JEEP_MAN": 2,
+          "TEN_JQKA": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "prompt": "一只票连续跌了 5 天，你会怎么安慰自己？",
+    "caption": "这题不是测你会不会止损，是测你会不会胡扯。",
+    "options": [
+      {
+        "label": "这是洗盘，越跌越像机会。",
+        "roast": "回调教徒。",
+        "effect": {
+          "CALL_BACK_FATHER": 4,
+          "JUICY_WONDER": 2,
+          "GOOD_FOUR": 1
+        }
+      },
+      {
+        "label": "跌这么多了，应该快轮到我了。",
+        "roast": "接刀型乐观。",
+        "effect": {
+          "GROW_HERO": 4,
+          "TEN_JQKA": 2
+        }
+      },
+      {
+        "label": "先扛着，扛到它自己懂事。",
+        "roast": "套牢型耐心。",
+        "effect": {
+          "TALL_LOW_DEAN": 4,
+          "GREENER": 2
+        }
+      },
+      {
+        "label": "麻了，先关软件。",
+        "roast": "摆烂预备役。",
+        "effect": {
+          "GOOD_FOUR": 4,
+          "DEFENDER_A": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "prompt": "\"明天有大消息\" 这句话在你耳朵里是什么意思？",
+    "caption": "你不是在听消息，你是在听幻想。",
+    "options": [
+      {
+        "label": "先信 30%，先上 70%。",
+        "roast": "消息先行。",
+        "effect": {
+          "JUICY_WONDER": 4,
+          "JEEP_MAN": 2,
+          "ALL_IN_GUY": 1
+        }
+      },
+      {
+        "label": "我不信，但我会记下来。",
+        "roast": "嘴上独立，手上诚实。",
+        "effect": {
+          "DEFENDER_A": 4,
+          "GREENER": 2
+        }
+      },
+      {
+        "label": "这句我能脑补成三倍逻辑。",
+        "roast": "意念补全。",
+        "effect": {
+          "MIND_GOD": 5,
+          "STOCK_GOD": 1
+        }
+      },
+      {
+        "label": "大消息我见得多了，先看板。",
+        "roast": "老油条。",
+        "effect": {
+          "CALL_BACK_FATHER": 3,
+          "GOOD_FOUR": 3
+        }
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "prompt": "你最喜欢的买点是什么时候？",
+    "caption": "别想太久，第一直觉最诚实。",
+    "options": [
+      {
+        "label": "突然拉红，气势最足的时候。",
+        "roast": "顶上拍门。",
+        "effect": {
+          "JEEP_MAN": 4,
+          "TEN_JQKA": 2,
+          "ALL_IN_GUY": 1
+        }
+      },
+      {
+        "label": "连续阴线，觉得差不多了。",
+        "roast": "接刀手感。",
+        "effect": {
+          "GROW_HERO": 4,
+          "TALL_LOW_DEAN": 2
+        }
+      },
+      {
+        "label": "指数刚稳住，我觉得全市场都要翻。",
+        "roast": "指数信徒。",
+        "effect": {
+          "DEFENDER_A": 4,
+          "STOCK_GOD": 2
+        }
+      },
+      {
+        "label": "大家开始讨论它的时候。",
+        "roast": "人声一热就进。",
+        "effect": {
+          "MIND_GOD": 4,
+          "JUICY_WONDER": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "prompt": "你账户满仓之后，精神状态通常是？",
+    "caption": "仓位越满，心态越像事故现场。",
+    "options": [
+      {
+        "label": "兴奋，感觉自己终于开窍。",
+        "roast": "梭哈上头。",
+        "effect": {
+          "ALL_IN_GUY": 5,
+          "STOCK_GOD": 2,
+          "TEN_JQKA": 1
+        }
+      },
+      {
+        "label": "紧张，开始一小时看八次盘。",
+        "roast": "盯盘成瘾。",
+        "effect": {
+          "TD_MASTER": 3,
+          "MIND_GOD": 3
+        }
+      },
+      {
+        "label": "开始幻想翻倍后的样子。",
+        "roast": "意念先涨。",
+        "effect": {
+          "STOCK_GOD": 4,
+          "MIND_GOD": 3
+        }
+      },
+      {
+        "label": "很快后悔，但已经晚了。",
+        "roast": "一键追悔。",
+        "effect": {
+          "GROW_HERO": 3,
+          "GOOD_FOUR": 3
+        }
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "prompt": "朋友喊你一起上车时，你最像哪种人？",
+    "caption": "合不合群，一题就够。",
+    "options": [
+      {
+        "label": "我先冲，别说那么多。",
+        "roast": "合群型梭哈。",
+        "effect": {
+          "JEEP_MAN": 4,
+          "ALL_IN_GUY": 2
+        }
+      },
+      {
+        "label": "先嘴上劝他冷静，手上偷偷买。",
+        "roast": "双面交易。",
+        "effect": {
+          "MIND_GOD": 4,
+          "JUICY_WONDER": 2
+        }
+      },
+      {
+        "label": "先看指数，不看故事。",
+        "roast": "守望者思路。",
+        "effect": {
+          "DEFENDER_A": 4,
+          "CALL_BACK_FATHER": 2
+        }
+      },
+      {
+        "label": "我怕上去之后只剩我一个人挨打。",
+        "roast": "受伤预判。",
+        "effect": {
+          "GOOD_FOUR": 4,
+          "TALL_LOW_DEAN": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "prompt": "亏损 20% 时，你最可能做什么？",
+    "caption": "这是你人格最容易露馅的一题。",
+    "options": [
+      {
+        "label": "补仓，摊低成本。",
+        "roast": "接刀持续升级。",
+        "effect": {
+          "GROW_HERO": 4,
+          "TALL_LOW_DEAN": 2,
+          "GREENER": 1
+        }
+      },
+      {
+        "label": "继续拿，等它自己回头。",
+        "roast": "套牢型修行。",
+        "effect": {
+          "TALL_LOW_DEAN": 5,
+          "GOOD_FOUR": 2
+        }
+      },
+      {
+        "label": "直接割，含泪说再见。",
+        "roast": "割肉侠上线。",
+        "effect": {
+          "GROW_HERO": 4,
+          "DEFENDER_A": 2
+        }
+      },
+      {
+        "label": "先发个\"稳住\"，然后装没事。",
+        "roast": "嘴硬式续命。",
+        "effect": {
+          "GREENER": 3,
+          "MIND_GOD": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "prompt": "跌停打开那一刻，你第一反应是？",
+    "caption": "这题看你是信仰派还是求生派。",
+    "options": [
+      {
+        "label": "反包要来了。",
+        "roast": "教门开坛。",
+        "effect": {
+          "FUN_BOW_FATHER": 5,
+          "CALL_BACK_FATHER": 2
+        }
+      },
+      {
+        "label": "这票是不是还有戏。",
+        "roast": "脑补没停。",
+        "effect": {
+          "MIND_GOD": 4,
+          "JUICY_WONDER": 2
+        }
+      },
+      {
+        "label": "先撤，别装。",
+        "roast": "逃顶直觉。",
+        "effect": {
+          "TD_MASTER": 4,
+          "GOOD_FOUR": 2
+        }
+      },
+      {
+        "label": "我再看一眼，万一呢。",
+        "roast": "手比脑子慢。",
+        "effect": {
+          "ALL_IN_GUY": 3,
+          "STOCK_GOD": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "prompt": "你对\"指数\"两个字的态度更接近？",
+    "caption": "大 A 信徒和题材赌徒会在这里分家。",
+    "options": [
+      {
+        "label": "指数才是护城河。",
+        "roast": "守望者本体。",
+        "effect": {
+          "DEFENDER_A": 5,
+          "CALL_BACK_FATHER": 1
+        }
+      },
+      {
+        "label": "指数只是背景板。",
+        "roast": "个股幻想家。",
+        "effect": {
+          "STOCK_GOD": 3,
+          "MIND_GOD": 2
+        }
+      },
+      {
+        "label": "指数红了，我更敢冲。",
+        "roast": "气氛党。",
+        "effect": {
+          "ALL_IN_GUY": 3,
+          "JEEP_MAN": 2
+        }
+      },
+      {
+        "label": "指数一绿，我先躺平。",
+        "roast": "情绪受影响。",
+        "effect": {
+          "GOOD_FOUR": 4,
+          "GREENER": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "prompt": "你看盘时最喜欢盯什么？",
+    "caption": "你盯哪里，哪里就是你的人格切面。",
+    "options": [
+      {
+        "label": "热度榜，谁热我就盯谁。",
+        "roast": "热榜猎手。",
+        "effect": {
+          "JEEP_MAN": 4,
+          "MIND_GOD": 2
+        }
+      },
+      {
+        "label": "分时线，越直越上头。",
+        "roast": "冲刺型人格。",
+        "effect": {
+          "TD_MASTER": 4,
+          "ALL_IN_GUY": 2
+        }
+      },
+      {
+        "label": "成交量，心里有杆秤。",
+        "roast": "偏理性。",
+        "effect": {
+          "DEFENDER_A": 3,
+          "STOCK_GOD": 2
+        }
+      },
+      {
+        "label": "评论区，先看别人怎么说。",
+        "roast": "消息依赖。",
+        "effect": {
+          "JUICY_WONDER": 5,
+          "MIND_GOD": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "prompt": "你复盘时最常见的台词是？",
+    "caption": "复盘不是学习，有时只是自我辩护。",
+    "options": [
+      {
+        "label": "我当时其实没错。",
+        "roast": "嘴硬到底。",
+        "effect": {
+          "GROW_HERO": 5,
+          "GREENER": 1
+        }
+      },
+      {
+        "label": "下次我会更稳。",
+        "roast": "自我修正。",
+        "effect": {
+          "DEFENDER_A": 4,
+          "CALL_BACK_FATHER": 2
+        }
+      },
+      {
+        "label": "主力太坏了。",
+        "roast": "妄想论升温。",
+        "effect": {
+          "JUICY_WONDER": 4,
+          "TALL_LOW_DEAN": 1
+        }
+      },
+      {
+        "label": "算了，先睡觉。",
+        "roast": "摆烂收尾。",
+        "effect": {
+          "GOOD_FOUR": 5,
+          "MIND_GOD": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "prompt": "如果一只票突然加速，你的手会？",
+    "caption": "快不快，往往决定你挨不挨打。",
+    "options": [
+      {
+        "label": "先买再说。",
+        "roast": "手比脑快。",
+        "effect": {
+          "TEN_JQKA": 4,
+          "ALL_IN_GUY": 3
+        }
+      },
+      {
+        "label": "先问，先看，先犹豫。",
+        "roast": "谨慎守望。",
+        "effect": {
+          "DEFENDER_A": 4,
+          "GOOD_FOUR": 2
+        }
+      },
+      {
+        "label": "先截图，准备发群。",
+        "roast": "表演欲在线。",
+        "effect": {
+          "MIND_GOD": 4,
+          "JUICY_WONDER": 1
+        }
+      },
+      {
+        "label": "先想是不是假突破。",
+        "roast": "被市场教育过。",
+        "effect": {
+          "CALL_BACK_FATHER": 4,
+          "GROW_HERO": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "prompt": "你最怕别人给你下什么结论？",
+    "caption": "这题很适合拿来照镜子。",
+    "options": [
+      {
+        "label": "韭者。",
+        "roast": "你怕的是准确。",
+        "effect": {
+          "GREENER": 5,
+          "GROW_HERO": 1
+        }
+      },
+      {
+        "label": "接盘侠。",
+        "roast": "热榜代价。",
+        "effect": {
+          "JEEP_MAN": 5,
+          "ALL_IN_GUY": 1
+        }
+      },
+      {
+        "label": "主力妄想者。",
+        "roast": "你心里有数。",
+        "effect": {
+          "JUICY_WONDER": 5,
+          "MIND_GOD": 1
+        }
+      },
+      {
+        "label": "股佛。",
+        "roast": "你已经懒得争了。",
+        "effect": {
+          "GOOD_FOUR": 5,
+          "CALL_BACK_FATHER": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "prompt": "\"一涨怕回撤，一跌怕退市\" 这句你听起来像谁？",
+    "caption": "别急着回答，先想想你平时怎么卖。",
+    "options": [
+      {
+        "label": "逃顶大师。",
+        "roast": "先天撤退型。",
+        "effect": {
+          "TD_MASTER": 5,
+          "CALL_BACK_FATHER": 1
+        }
+      },
+      {
+        "label": "回调教父。",
+        "roast": "跌了也能编。",
+        "effect": {
+          "CALL_BACK_FATHER": 5,
+          "DEFENDER_A": 1
+        }
+      },
+      {
+        "label": "梭哈King。",
+        "roast": "气势型无脑。",
+        "effect": {
+          "TEN_JQKA": 5,
+          "ALL_IN_GUY": 2
+        }
+      },
+      {
+        "label": "大A守望者。",
+        "roast": "指数才是归宿。",
+        "effect": {
+          "DEFENDER_A": 5,
+          "GOOD_FOUR": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "prompt": "如果有人说\"这票要走二波\"，你会？",
+    "caption": "二波到底是机会还是续命词，自己选。",
+    "options": [
+      {
+        "label": "立刻研究反包结构。",
+        "roast": "神父上线。",
+        "effect": {
+          "FUN_BOW_FATHER": 5,
+          "JUICY_WONDER": 1
+        }
+      },
+      {
+        "label": "先看成交量够不够戏。",
+        "roast": "理性派还是会动。",
+        "effect": {
+          "STOCK_GOD": 4,
+          "DEFENDER_A": 2
+        }
+      },
+      {
+        "label": "先幻想一下翻倍收益。",
+        "roast": "意念已在路上。",
+        "effect": {
+          "MIND_GOD": 5,
+          "ALL_IN_GUY": 1
+        }
+      },
+      {
+        "label": "先怀疑是不是在骗我。",
+        "roast": "被打怕了。",
+        "effect": {
+          "GOOD_FOUR": 4,
+          "GROW_HERO": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "prompt": "你准备撤退时最常见的理由是？",
+    "caption": "撤退的本质，可能只是认输。",
+    "options": [
+      {
+        "label": "已经赚到了，先跑。",
+        "roast": "逃顶反应。",
+        "effect": {
+          "TD_MASTER": 5,
+          "CALL_BACK_FATHER": 1
+        }
+      },
+      {
+        "label": "不对劲，先保住本金。",
+        "roast": "防守优先。",
+        "effect": {
+          "DEFENDER_A": 4,
+          "GOOD_FOUR": 2
+        }
+      },
+      {
+        "label": "不想再看了。",
+        "roast": "摆烂撤退。",
+        "effect": {
+          "GOOD_FOUR": 5,
+          "TALL_LOW_DEAN": 1
+        }
+      },
+      {
+        "label": "再等等，可能会回头。",
+        "roast": "套牢心理。",
+        "effect": {
+          "TALL_LOW_DEAN": 4,
+          "GROW_HERO": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "prompt": "如果现在给你下结论，你最怕它说什么？",
+    "caption": "最后一道题，别装了。",
+    "options": [
+      {
+        "label": "\"你只是热闹型跟风。\"",
+        "roast": "听着像你。",
+        "effect": {
+          "JEEP_MAN": 4,
+          "MIND_GOD": 2
+        }
+      },
+      {
+        "label": "\"你总在关键时刻梭哈。\"",
+        "roast": "梭门实锤。",
+        "effect": {
+          "TEN_JQKA": 5,
+          "ALL_IN_GUY": 2
+        }
+      },
+      {
+        "label": "\"你把运气当能力。\"",
+        "roast": "这句有点疼。",
+        "effect": {
+          "STOCK_GOD": 4,
+          "JUICY_WONDER": 2
+        }
+      },
+      {
+        "label": "\"你其实已经认命了。\"",
+        "roast": "股佛定级。",
+        "effect": {
+          "GOOD_FOUR": 5,
+          "TALL_LOW_DEAN": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "prompt": "如果账户会说话，它最可能骂你什么？",
+    "caption": "这题是终局判定。",
+    "options": [
+      {
+        "label": "\"韭者，别研究了。\"",
+        "roast": "越研究越绿。",
+        "effect": {
+          "GREENER": 5,
+          "GROW_HERO": 2
+        }
+      },
+      {
+        "label": "\"接盘侠，快醒醒。\"",
+        "roast": "热榜后遗症。",
+        "effect": {
+          "JEEP_MAN": 5,
+          "ALL_IN_GUY": 1
+        }
+      },
+      {
+        "label": "\"主力没盯你，是你太会想。\"",
+        "roast": "妄想症核验。",
+        "effect": {
+          "JUICY_WONDER": 5,
+          "MIND_GOD": 1
+        }
+      },
+      {
+        "label": "\"你先别激动，账户已经认了。\"",
+        "roast": "股佛圆寂。",
+        "effect": {
+          "GOOD_FOUR": 5,
+          "CALL_BACK_FATHER": 1
+        }
+      }
+    ]
+  }
+]
