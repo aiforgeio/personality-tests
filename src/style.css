@@ -334,54 +334,97 @@ body {
 }
 
 .fact-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 6px;
   text-align: center;
-  padding: var(--space-md) var(--space-sm);
+  min-height: 166px;
+  padding: 14px 12px;
 }
 
 .fact-value {
-  font-size: clamp(1.3rem, 4vw, 1.7rem);
-  line-height: 1.1;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  font-size: clamp(1.45rem, 4.9vw, 1.95rem);
+  line-height: 1;
   font-weight: 900;
+  letter-spacing: -0.01em;
   color: var(--primary);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .fact-label {
-  margin-top: 6px;
-  font-size: 0.76rem;
-  font-weight: 700;
+  margin-top: 0;
+  font-size: 0.82rem;
+  line-height: 1.26;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   color: var(--text-secondary);
 }
 
 .fact-note {
-  margin-top: 4px;
-  font-size: 0.7rem;
+  margin-top: 0;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.42;
+  min-height: calc(1.42em * 2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .benefit-card {
-  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 6px;
+  min-height: 166px;
+  padding: 14px 12px;
 }
 
 .benefit-index {
+  display: inline-flex;
+  align-items: flex-end;
+  min-height: 22px;
+  margin-bottom: 2px;
   color: var(--primary);
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .benefit-title {
-  margin-top: 6px;
-  font-size: 0.86rem;
+  margin-top: 0;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  min-height: calc(1.35em * 2);
   font-weight: 800;
   color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .benefit-text {
-  margin-top: 4px;
-  font-size: 0.74rem;
+  margin-top: 0;
+  font-size: 0.75rem;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.45;
+  min-height: calc(1.45em * 3);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .intro-spotlight-section {
@@ -1886,8 +1929,34 @@ body {
     gap: 8px;
   }
 
+  .fact-card,
+  .benefit-card {
+    min-height: 156px;
+    padding: 12px 10px;
+    gap: 5px;
+  }
+
   .fact-value {
-    font-size: 1.2rem;
+    min-height: 46px;
+    font-size: 1.32rem;
+  }
+
+  .fact-label {
+    font-size: 0.78rem;
+  }
+
+  .fact-note,
+  .benefit-text {
+    font-size: 0.69rem;
+  }
+
+  .benefit-index {
+    font-size: 0.92rem;
+    min-height: 20px;
+  }
+
+  .benefit-title {
+    font-size: 0.84rem;
   }
 
   .result-hero-image-wrap {

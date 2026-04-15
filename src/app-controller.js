@@ -22,6 +22,19 @@ function buildDurationLabel(pack) {
   return `预计 ${minutes}-${minutes + 1} 分钟`
 }
 
+function trimCardEndingPunctuation(text) {
+  const value = String(text || '').trim()
+  if (!value) return ''
+  return value.replace(/[。！!？?…\.]+[”’"'）)\]]*$/u, '').trim()
+}
+
+function resolveDurationMinutes(pack, display = {}) {
+  const source = String(display.estimatedDurationLabel || buildDurationLabel(pack) || '')
+  const match = source.match(/(\d+)(?:\s*[-~—至]\s*\d+)?\s*分/)
+  if (match) return match[1]
+  return String(Math.max(3, Math.round((pack.questions?.length || 0) / 10)))
+}
+
 function resolveLinkShareCTA(pack) {
   const custom = pack?.shareConfig?.linkCopyText
   if (typeof custom === 'string' && custom.trim()) {
@@ -181,17 +194,17 @@ function renderFactCards(container, pack, display = {}) {
     {
       value: `${pack.questions.length}`,
       label: '常规题目',
-      note: '围绕真实场景设计，回答起来更容易进入状态。',
+      note: trimCardEndingPunctuation('围绕真实场景设计，回答起来更容易进入状态。'),
     },
     {
       value: `${pack.dimensions?.order?.length ?? 0}`,
       label: '维度模型',
-      note: '从多个维度看你的倾向，结果会更立体。',
+      note: trimCardEndingPunctuation('从多个维度看你的倾向，结果会更立体。'),
     },
     {
-      value: display.estimatedDurationLabel || buildDurationLabel(pack),
-      label: '出结果时间',
-      note: '完成后可立即查看结果。',
+      value: resolveDurationMinutes(pack, display),
+      label: '分钟测试',
+      note: trimCardEndingPunctuation('完成后可立即查看结果。'),
     },
   ]
 
@@ -214,11 +227,12 @@ function renderBenefits(container, items = []) {
 
   items.forEach((item, index) => {
     const card = document.createElement('article')
+    const cardText = trimCardEndingPunctuation(item.text)
     card.className = 'info-card benefit-card'
     card.innerHTML = `
       <div class="benefit-index">${String(index + 1).padStart(2, '0')}</div>
       <div class="benefit-title">${item.title}</div>
-      <div class="benefit-text">${item.text}</div>
+      <div class="benefit-text">${cardText}</div>
     `
     container.appendChild(card)
   })
