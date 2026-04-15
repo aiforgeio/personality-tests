@@ -7,7 +7,7 @@ import {
   getPosterComparison,
   getPosterQuote,
 } from './result-highlights.js'
-import { formatCode, toLines } from './utils.js'
+import { formatCode, stripEndingPunctuation, toLines } from './utils.js'
 
 /* ---- Canvas 工具函数 ---- */
 
@@ -51,7 +51,7 @@ function clampLines(text, limit, maxLines) {
 
   const visible = lines.slice(0, maxLines)
   const last = visible[maxLines - 1] || ''
-  visible[maxLines - 1] = `${last.slice(0, Math.max(0, limit - 2))}...`
+  visible[maxLines - 1] = last.slice(0, Math.max(0, limit))
   return visible
 }
 
@@ -188,7 +188,7 @@ async function drawHeroPanel(ctx, hero, x, y, width, height) {
 /* ---- 文本区块 ---- */
 
 function drawQuoteCard(ctx, text, x, y, width) {
-  const lines = clampLines(text, 16, 2)
+  const lines = clampLines(stripEndingPunctuation(text), 16, 2)
   const lineHeight = 28
   const height = Math.max(74, lines.length * lineHeight + 24)
 
@@ -210,7 +210,7 @@ function drawQuoteCard(ctx, text, x, y, width) {
 }
 
 function drawTags(ctx, tags, centerX, y, maxWidth) {
-  const visibleTags = tags.slice(0, 3)
+  const visibleTags = tags.map((tag) => stripEndingPunctuation(tag)).filter(Boolean).slice(0, 3)
   if (!visibleTags.length) return y
 
   ctx.font = `700 17px ${FONT}`
@@ -223,7 +223,7 @@ function drawTags(ctx, tags, centerX, y, maxWidth) {
   let rowWidth = 0
 
   visibleTags.forEach((text) => {
-    const safeText = text.length > 8 ? `${text.slice(0, 8)}...` : text
+    const safeText = text.length > 8 ? text.slice(0, 8) : text
     const width = ctx.measureText(safeText).width + paddingX * 2
 
     if (row.length > 0 && rowWidth + width + gap > maxWidth) {
@@ -272,7 +272,7 @@ function drawComparisonPill(ctx, comparison, centerX, y, maxWidth) {
   const rawTitle = comparison.title || comparison.code || ''
   if (!rawTitle) return y
 
-  const title = rawTitle.length > 10 ? `${rawTitle.slice(0, 10)}...` : rawTitle
+  const title = rawTitle.length > 10 ? rawTitle.slice(0, 10) : rawTitle
   const text = `常规命中 ${title}`
 
   ctx.font = `700 16px ${FONT}`
@@ -326,7 +326,7 @@ function drawDimensionGrid(ctx, dimensions, x, y, width) {
     ctx.textAlign = 'left'
     ctx.fillStyle = PALETTE.textSecondary
     ctx.font = `600 15px ${FONT}`
-    const label = item.label.length > 8 ? `${item.label.slice(0, 8)}...` : item.label
+    const label = item.label.length > 8 ? item.label.slice(0, 8) : item.label
     ctx.fillText(label, cardX + 12, cardY + 22)
 
     ctx.textAlign = 'right'
@@ -366,7 +366,7 @@ export async function generateShareImage(result) {
   const tags = getHighlightTags(result, 3)
   const dimensions = getHighlightDimensions(result, 4)
   const comparison = getPosterComparison(result)
-  const quote = getPosterQuote(result)
+  const quote = stripEndingPunctuation(getPosterQuote(result))
 
   const dpr = 2
   const width = 720
@@ -401,7 +401,10 @@ export async function generateShareImage(result) {
   await drawHeroPanel(ctx, hero, centerX - heroW / 2, y, heroW, heroH)
   y += heroH + 20
 
-  const title = hero.title || formatCode(hero.code)
+  const hasNaturalHeroTitle = Boolean(hero?.data?.alias || hero?.data?.name || hero?.data?.title)
+  const title = hasNaturalHeroTitle
+    ? (stripEndingPunctuation(hero.title || '') || formatCode(hero.code))
+    : (hero.title || formatCode(hero.code))
   const titleSize = fitTextSize(ctx, title, cardW - 84, 82, 52, 900)
   ctx.fillStyle = PALETTE.text
   ctx.font = `900 ${titleSize}px ${FONT}`
@@ -464,7 +467,7 @@ export async function generateShareImage(result) {
 
   ctx.fillStyle = PALETTE.textMuted
   ctx.font = `600 17px ${FONT}`
-  ctx.fillText(share?.title || '人格测试', cardX + 118, footerY + 71)
+  ctx.fillText(stripEndingPunctuation(share?.title || '人格测试'), cardX + 118, footerY + 71)
 
   const dataUrl = canvas.toDataURL('image/png', 1.0)
 

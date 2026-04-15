@@ -1,11 +1,15 @@
-import { getByPath } from '../utils.js'
+import { getByPath, stripEndingPunctuation } from '../utils.js'
 
 function toTitle(value) {
-  return value.alias ?? value.name ?? value.title ?? value.code ?? ''
+  const naturalTitle = value.alias ?? value.name ?? value.title
+  if (naturalTitle) {
+    return stripEndingPunctuation(naturalTitle)
+  }
+  return value.code ?? ''
 }
 
 function toSubtitle(value) {
-  return value.english ?? value.subtitle ?? ''
+  return stripEndingPunctuation(value.english ?? value.subtitle ?? '')
 }
 
 function resolveHeroImage(outcome, pack) {
@@ -32,12 +36,12 @@ function toTextItems(values) {
     .map((value) => {
       if (typeof value === 'object') {
         return {
-          text: value.text ?? value.label ?? value.value ?? '',
-          note: value.note ?? '',
+          text: stripEndingPunctuation(value.text ?? value.label ?? value.value ?? ''),
+          note: stripEndingPunctuation(value.note ?? ''),
         }
       }
 
-      return { text: String(value), note: '' }
+      return { text: stripEndingPunctuation(String(value)), note: '' }
     })
 }
 
@@ -49,9 +53,9 @@ function toStatItems(values) {
     .map((value) => {
       if (typeof value === 'object') {
         return {
-          label: value.label ?? '',
+          label: stripEndingPunctuation(value.label ?? ''),
           value: value.value ?? value.text ?? '',
-          note: value.note ?? '',
+          note: stripEndingPunctuation(value.note ?? ''),
           tone: value.tone ?? 'default',
         }
       }
@@ -89,15 +93,15 @@ function toDimensionItems(values) {
     .filter(Boolean)
     .map((value) => ({
       id: value.id ?? '',
-      label: value.label ?? value.id ?? '',
-      shortLabel: value.shortLabel ?? value.label ?? value.id ?? '',
+      label: stripEndingPunctuation(value.label ?? value.id ?? ''),
+      shortLabel: stripEndingPunctuation(value.shortLabel ?? value.label ?? value.id ?? ''),
       model: value.model ?? '',
       score: value.score ?? 0,
       percentage: value.percentage ?? 0,
       levelCode: value.levelCode ?? value.level ?? '',
       levelLabel: value.levelLabel ?? value.level ?? '',
-      description: value.description ?? '',
-      explanation: value.explanation ?? '',
+      description: stripEndingPunctuation(value.description ?? ''),
+      explanation: stripEndingPunctuation(value.explanation ?? ''),
     }))
 }
 
@@ -182,22 +186,22 @@ export function createHeroViewModel(outcome, pack, meta = {}) {
   const subtitle = toSubtitle(outcome)
 
   return {
-    kicker: outcome.kicker ?? meta.kicker ?? '',
+    kicker: stripEndingPunctuation(outcome.kicker ?? meta.kicker ?? ''),
     code: outcome.code ?? '',
     title: toTitle(outcome),
     subtitle,
-    sub: outcome.sub ?? subtitle,
-    badge: outcome.badge ?? '',
-    description: outcome.brief ?? outcome.description ?? '',
-    note: outcome.systemNote ?? outcome.note ?? '',
+    sub: stripEndingPunctuation(outcome.sub ?? subtitle),
+    badge: stripEndingPunctuation(outcome.badge ?? ''),
+    description: stripEndingPunctuation(outcome.brief ?? outcome.description ?? ''),
+    note: stripEndingPunctuation(outcome.systemNote ?? outcome.note ?? ''),
     image: resolveHeroImage(outcome, pack),
     rarity: outcome.rarity ?? '',
     art: outcome.art ?? null,
-    tags: Array.isArray(outcome.tags) ? outcome.tags : [],
-    scenes: Array.isArray(outcome.scenes) ? outcome.scenes : [],
-    mantras: Array.isArray(outcome.mantras) ? outcome.mantras : [],
-    tips: Array.isArray(outcome.tips) ? outcome.tips : [],
-    reasons: toReasonItems(outcome.reasons),
+    tags: Array.isArray(outcome.tags) ? outcome.tags.map(stripEndingPunctuation) : [],
+    scenes: Array.isArray(outcome.scenes) ? outcome.scenes.map(stripEndingPunctuation) : [],
+    mantras: Array.isArray(outcome.mantras) ? outcome.mantras.map(stripEndingPunctuation) : [],
+    tips: Array.isArray(outcome.tips) ? outcome.tips.map(stripEndingPunctuation) : [],
+    reasons: toReasonItems(outcome.reasons).map(stripEndingPunctuation),
     confidence: meta.confidence ?? null,
     data: outcome,
   }

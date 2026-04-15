@@ -4,13 +4,15 @@ import { createNoopResultReporter } from './reporters/index.js'
 import { createResultView } from './result.js'
 import { createScorerRegistry } from './scorers/index.js'
 import { createLocalTestPackSource } from './test-pack/source.js'
+import { compactCardText, stripEndingPunctuation } from './utils.js'
 
 /* ---- 工具函数 ---- */
 
 function setText(element, value) {
   if (!element) return
-  element.textContent = value || ''
-  element.hidden = !value
+  const normalized = stripEndingPunctuation(value)
+  element.textContent = normalized
+  element.hidden = !normalized
 }
 
 function buildStatsLine(pack) {
@@ -20,12 +22,6 @@ function buildStatsLine(pack) {
 function buildDurationLabel(pack) {
   const minutes = Math.max(3, Math.round(pack.questions.length / 10))
   return `预计 ${minutes}-${minutes + 1} 分钟`
-}
-
-function trimCardEndingPunctuation(text) {
-  const value = String(text || '').trim()
-  if (!value) return ''
-  return value.replace(/[。！!？?…\.]+[”’"'）)\]]*$/u, '').trim()
 }
 
 function resolveDurationMinutes(pack, display = {}) {
@@ -69,7 +65,7 @@ function showToast(message, duration = 2500) {
   const toast = document.getElementById('toast')
   if (!toast) return
 
-  toast.textContent = message
+  toast.textContent = stripEndingPunctuation(message)
   toast.classList.add('show')
 
   if (toastTimer) clearTimeout(toastTimer)
@@ -124,10 +120,10 @@ function triggerConfetti() {
 /* ---- Loading 动画控制 ---- */
 
 const LOADING_MESSAGES = [
-  '正在分析你的性格特征...',
-  '正在匹配交易人格类型...',
-  '正在计算维度分布...',
-  '即将揭晓你的专属结果...',
+  '正在分析你的性格特征',
+  '正在匹配交易人格类型',
+  '正在计算维度分布',
+  '即将揭晓你的专属结果',
 ]
 
 let loadingTimer = null
@@ -139,7 +135,11 @@ function startLoadingAnimation() {
 
   // 重置
   if (progressFill) progressFill.style.width = '0%'
-  messages.forEach((msg) => msg.classList.remove('active'))
+  messages.forEach((msg, index) => {
+    const text = LOADING_MESSAGES[index] || msg.textContent
+    msg.textContent = stripEndingPunctuation(text)
+    msg.classList.remove('active')
+  })
 
   let messageIndex = 0
   let progress = 0
@@ -180,7 +180,7 @@ function renderTrustBadges(container, values = []) {
   values.forEach((value) => {
     const badge = document.createElement('span')
     badge.className = 'trust-pill'
-    badge.textContent = value
+    badge.textContent = stripEndingPunctuation(value)
     container.appendChild(badge)
   })
 
@@ -192,19 +192,19 @@ function renderFactCards(container, pack, display = {}) {
 
   const items = [
     {
-      value: `${pack.questions.length}`,
-      label: '常规题目',
-      note: trimCardEndingPunctuation('围绕真实场景设计，回答起来更容易进入状态。'),
+      key: `${pack.questions.length}`,
+      title: '常规题目',
+      body: compactCardText('围绕真实场景设计，回答起来更容易进入状态。'),
     },
     {
-      value: `${pack.dimensions?.order?.length ?? 0}`,
-      label: '维度模型',
-      note: trimCardEndingPunctuation('从多个维度看你的倾向，结果会更立体。'),
+      key: `${pack.dimensions?.order?.length ?? 0}`,
+      title: '维度模型',
+      body: compactCardText('从多个维度看你的倾向，结果会更立体。'),
     },
     {
-      value: resolveDurationMinutes(pack, display),
-      label: '分钟测试',
-      note: trimCardEndingPunctuation('完成后可立即查看结果。'),
+      key: resolveDurationMinutes(pack, display),
+      title: '分钟测试',
+      body: compactCardText('完成后可立即查看结果。'),
     },
   ]
 
@@ -212,9 +212,9 @@ function renderFactCards(container, pack, display = {}) {
     const card = document.createElement('article')
     card.className = 'info-card fact-card'
     card.innerHTML = `
-      <div class="fact-value">${item.value}</div>
-      <div class="fact-label">${item.label}</div>
-      <div class="fact-note">${item.note}</div>
+      <div class="intro-card-key">${item.key}</div>
+      <div class="intro-card-title">${stripEndingPunctuation(item.title)}</div>
+      <div class="intro-card-body">${item.body}</div>
     `
     container.appendChild(card)
   })
@@ -227,12 +227,13 @@ function renderBenefits(container, items = []) {
 
   items.forEach((item, index) => {
     const card = document.createElement('article')
-    const cardText = trimCardEndingPunctuation(item.text)
+    const title = stripEndingPunctuation(item.title || '')
+    const body = compactCardText(item.text, 26)
     card.className = 'info-card benefit-card'
     card.innerHTML = `
-      <div class="benefit-index">${String(index + 1).padStart(2, '0')}</div>
-      <div class="benefit-title">${item.title}</div>
-      <div class="benefit-text">${cardText}</div>
+      <div class="intro-card-key">${String(index + 1).padStart(2, '0')}</div>
+      <div class="intro-card-title">${title}</div>
+      <div class="intro-card-body">${body}</div>
     `
     container.appendChild(card)
   })
@@ -251,17 +252,21 @@ function renderSpotlight(container, pack, codes = []) {
   items.forEach((outcome) => {
     const card = document.createElement('article')
     card.className = 'info-card spotlight-card'
+    const titleText = outcome.alias
+      ? stripEndingPunctuation(outcome.alias)
+      : outcome.code
+    const copyText = stripEndingPunctuation(outcome.badge || outcome.brief || '')
 
     const imageHtml = outcome.image
-      ? `<img class="spotlight-image" src="${outcome.image}" alt="${outcome.alias || outcome.code}" loading="lazy" decoding="async" fetchpriority="low" />`
+      ? `<img class="spotlight-image" src="${outcome.image}" alt="${titleText}" loading="lazy" decoding="async" fetchpriority="low" />`
       : `<div class="spotlight-placeholder">${outcome.code}</div>`
 
     card.innerHTML = `
       <div class="spotlight-image-wrap">${imageHtml}</div>
       <div class="spotlight-kicker">示例结果</div>
-      <div class="spotlight-title">${outcome.alias || outcome.code}</div>
+      <div class="spotlight-title">${titleText}</div>
       <div class="spotlight-code">${outcome.code}</div>
-      <div class="spotlight-copy">${outcome.badge || outcome.brief || ''}</div>
+      <div class="spotlight-copy">${copyText}</div>
     `
     container.appendChild(card)
   })
@@ -335,18 +340,19 @@ export function createAppController({
 
   /* ---- 按钮状态 ---- */
 
-  function setStartButtonState({ disabled, label }) {
-    if (!els.startButton) return
-    els.startButton.disabled = disabled
-    if (label) {
-      const textEl = els.startButton.querySelector('.btn-text')
-      if (textEl) {
-        textEl.textContent = label
-      } else {
-        els.startButton.textContent = label
-      }
+function setStartButtonState({ disabled, label }) {
+  if (!els.startButton) return
+  els.startButton.disabled = disabled
+  if (label) {
+    const normalized = stripEndingPunctuation(label)
+    const textEl = els.startButton.querySelector('.btn-text')
+    if (textEl) {
+      textEl.textContent = normalized
+    } else {
+      els.startButton.textContent = normalized
     }
   }
+}
 
   /* ---- 首页内容 ---- */
 
@@ -387,7 +393,7 @@ export function createAppController({
     setText(els.introStatsLine, display.statsLine || buildStatsLine(pack))
     setText(
       els.introSecondaryNote,
-      display.secondaryNote || '打开即可开始，答完就能看到结果。',
+      display.secondaryNote || '打开即可开始，答完就能看到结果',
     )
     renderFactCards(els.introFacts, pack, display)
     renderBenefits(els.introBenefits, display.benefits || [])
@@ -415,7 +421,7 @@ export function createAppController({
   function showLoadError(error) {
     console.error(error)
     if (els.introSubtitle) {
-      els.introSubtitle.textContent = '测试资源加载失败，请刷新页面后重试。'
+      els.introSubtitle.textContent = '测试资源加载失败，请刷新页面后重试'
     }
     renderFactCards(els.introFacts, { questions: [], dimensions: { order: [] } }, {})
     renderBenefits(els.introBenefits, [])
@@ -511,7 +517,7 @@ export function createAppController({
     button.disabled = true
     const textEl = button.querySelector('span:last-child') || button
     const originalText = textEl.textContent
-    textEl.textContent = '生成中...'
+    textEl.textContent = '生成中'
 
     try {
       const { generateShareImage } = await import('./share.js')

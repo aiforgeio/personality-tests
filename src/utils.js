@@ -22,6 +22,25 @@ export function formatCode(code) {
   return String(code || '').replace(/_/g, ' ')
 }
 
+export function stripEndingPunctuation(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return ''
+
+  return text
+    .replace(/[。！？?!…，,；;：:]+(?:[”’"'）)\]】》」』]+)?$/u, '')
+    .trim()
+}
+
+export function compactCardText(value, maxChars = 26) {
+  const cleaned = stripEndingPunctuation(value)
+  if (!cleaned) return ''
+
+  const chars = Array.from(cleaned)
+  if (chars.length <= maxChars) return cleaned
+
+  return stripEndingPunctuation(chars.slice(0, maxChars).join('').trim())
+}
+
 export function toLines(text, limit = 22) {
   if (!text) return []
   const chars = Array.from(text)

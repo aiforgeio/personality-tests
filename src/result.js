@@ -4,15 +4,7 @@ import {
   getHighlightTags,
   getShareCardStats,
 } from './result-highlights.js'
-import { formatCode } from './utils.js'
-
-/* ---- 工具函数 ---- */
-
-function setText(element, value) {
-  if (!element) return
-  element.textContent = value || ''
-  element.hidden = !value
-}
+import { formatCode, stripEndingPunctuation } from './utils.js'
 
 function renderTextList(container, values) {
   const list = document.createElement('ul')
@@ -20,7 +12,7 @@ function renderTextList(container, values) {
 
   values.forEach((value) => {
     const row = document.createElement('li')
-    row.textContent = value.text
+    row.textContent = stripEndingPunctuation(value.text)
     list.appendChild(row)
   })
 
@@ -32,7 +24,7 @@ function renderTags(container, values) {
   values.forEach((value) => {
     const tag = document.createElement('span')
     tag.className = 'tag'
-    tag.textContent = value
+    tag.textContent = stripEndingPunctuation(value)
     container.appendChild(tag)
   })
 }
@@ -146,10 +138,14 @@ function renderHeroSummaryInCard(container, result) {
   const comparison = result.secondaryHero ? getComparisonHero(result) : null
 
   container.innerHTML = ''
+  const hasNaturalHeroTitle = Boolean(hero?.data?.alias || hero?.data?.name || hero?.data?.title)
+  const displayHeroTitle = hasNaturalHeroTitle
+    ? stripEndingPunctuation(hero.title || '')
+    : (hero.title || '')
 
   const titleEl = document.createElement('div')
   titleEl.className = 'hero-summary-title'
-  titleEl.textContent = hero.title || ''
+  titleEl.textContent = displayHeroTitle
   container.appendChild(titleEl)
 
   const codeEl = document.createElement('div')
@@ -160,7 +156,7 @@ function renderHeroSummaryInCard(container, result) {
   if (hero.badge) {
     const leadEl = document.createElement('div')
     leadEl.className = 'hero-summary-lead'
-    leadEl.textContent = hero.badge
+    leadEl.textContent = stripEndingPunctuation(hero.badge)
     container.appendChild(leadEl)
   }
 
@@ -185,10 +181,11 @@ function renderDimensionList(container, items) {
   items.forEach((item) => {
     const row = document.createElement('div')
     row.className = 'dimension-row detail'
+    const descriptionText = stripEndingPunctuation(item.description || item.explanation || '')
     row.innerHTML = `
       <div class="dimension-row-head">
         <div>
-          <div class="dimension-label">${item.label}</div>
+          <div class="dimension-label">${stripEndingPunctuation(item.label)}</div>
           <div class="dimension-meta">${[item.model, item.levelLabel || item.levelCode].filter(Boolean).join(' · ')}</div>
         </div>
         <div class="dimension-score">${item.levelCode} / ${item.score}</div>
@@ -196,7 +193,7 @@ function renderDimensionList(container, items) {
       <div class="dimension-track">
         <div class="dimension-fill" data-pct="${item.percentage}" style="width: 0%"></div>
       </div>
-      <div class="dimension-desc">${item.description || item.explanation || ''}</div>
+      <div class="dimension-desc">${descriptionText}</div>
     `
 
     const desc = row.querySelector('.dimension-desc')
@@ -236,7 +233,7 @@ function renderStatsInline(container, items, { compact = false } = {}) {
     const chip = document.createElement('div')
     chip.className = `stat-chip stat-chip-${item.tone || 'default'}`
     chip.innerHTML = `
-      <span class="stat-label">${item.label || ''}</span>
+      <span class="stat-label">${stripEndingPunctuation(item.label || '')}</span>
       <span class="stat-value">${item.value || ''}</span>
       ${item.note ? `<span class="stat-note">${item.note}</span>` : ''}
     `
@@ -299,14 +296,14 @@ function createSectionShell(section) {
   if (section.title) {
     const title = document.createElement('h3')
     title.className = 'section-title'
-    title.textContent = section.title
+    title.textContent = stripEndingPunctuation(section.title)
     wrapper.appendChild(title)
   }
 
   if (section.lead) {
     const lead = document.createElement('p')
     lead.className = 'section-lead'
-    lead.textContent = section.lead
+    lead.textContent = stripEndingPunctuation(section.lead)
     wrapper.appendChild(lead)
   }
 
@@ -339,7 +336,7 @@ function renderDetailSections(container, result) {
 
 function renderShareCard(result, els) {
   if (els.badge) {
-    els.badge.textContent = '你的人格类型是：'
+    els.badge.textContent = '你的人格类型是'
   }
 
   if (els.imageWrap) {
@@ -404,22 +401,25 @@ export function createResultView({ onRestart, onDownload }) {
       const label = compact
         ? '保存海报'
         : (displayConfig.downloadButtonLabel || '保存结果图片')
-      if (textEl) textEl.textContent = label
-      else els.download.textContent = label
+      const normalized = stripEndingPunctuation(label)
+      if (textEl) textEl.textContent = normalized
+      else els.download.textContent = normalized
     }
 
     if (els.share) {
       const textEl = els.share.querySelector('span:last-child')
       const label = compact ? '分享链接' : '分享好友'
-      if (textEl) textEl.textContent = label
-      else els.share.textContent = label
+      const normalized = stripEndingPunctuation(label)
+      if (textEl) textEl.textContent = normalized
+      else els.share.textContent = normalized
     }
 
     if (els.restart) {
       const textEl = els.restart.querySelector('span:last-child')
       const label = compact ? '再测一次' : (displayConfig.restartButtonLabel || '再测一次')
-      if (textEl) textEl.textContent = label
-      else els.restart.textContent = label
+      const normalized = stripEndingPunctuation(label)
+      if (textEl) textEl.textContent = normalized
+      else els.restart.textContent = normalized
     }
   }
 

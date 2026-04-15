@@ -1,13 +1,13 @@
-import { formatCode } from './utils.js'
+import { formatCode, stripEndingPunctuation } from './utils.js'
 
 function toTextValue(value) {
   if (value == null) return ''
 
   if (typeof value === 'object') {
-    return String(value.text ?? value.label ?? value.value ?? '').trim()
+    return stripEndingPunctuation(String(value.text ?? value.label ?? value.value ?? '').trim())
   }
 
-  return String(value).trim()
+  return stripEndingPunctuation(String(value).trim())
 }
 
 function buildDimensionSalience(item) {
@@ -30,7 +30,7 @@ export function getHighlightDimensions(result, limit = 4) {
     .map((item) => ({
       ...item,
       salience: buildDimensionSalience(item),
-      label: item.shortLabel ?? item.label ?? item.id ?? '',
+      label: stripEndingPunctuation(item.shortLabel ?? item.label ?? item.id ?? ''),
     }))
     .sort((left, right) => right.salience - left.salience || right.percentage - left.percentage)
     .slice(0, limit)
@@ -39,7 +39,14 @@ export function getHighlightDimensions(result, limit = 4) {
 
 export function getComparisonHero(result) {
   const hero = result?.secondaryHero || result?.hero || {}
-  const title = hero.title || hero.alias || formatCode(hero.code)
+  const titleText = hero?.data?.alias
+    ?? hero?.data?.name
+    ?? hero?.data?.title
+    ?? hero.alias
+    ?? ''
+  const title = titleText
+    ? stripEndingPunctuation(titleText)
+    : formatCode(hero.code)
 
   return {
     title,
@@ -79,7 +86,7 @@ export function getShareCardStats(result) {
 }
 
 export function getPosterQuote(result) {
-  return String(result?.hero?.badge || '').trim()
+  return stripEndingPunctuation(String(result?.hero?.badge || '').trim())
 }
 
 export function getPosterComparison(result) {

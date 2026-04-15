@@ -337,77 +337,46 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 6px;
-  text-align: center;
-  min-height: 166px;
+  align-items: flex-start;
+  gap: 7px;
+  text-align: left;
+  min-height: 172px;
   padding: 14px 12px;
-}
-
-.fact-value {
-  display: inline-flex;
-  align-items: flex-end;
-  justify-content: center;
-  width: 100%;
-  min-height: 52px;
-  font-size: clamp(1.45rem, 4.9vw, 1.95rem);
-  line-height: 1;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: var(--primary);
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "lnum" 1;
-}
-
-.fact-label {
-  margin-top: 0;
-  font-size: 0.82rem;
-  line-height: 1.26;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  color: var(--text-secondary);
-}
-
-.fact-note {
-  margin-top: 0;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  line-height: 1.42;
-  min-height: calc(1.42em * 2);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .benefit-card {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 6px;
-  min-height: 166px;
+  align-items: flex-start;
+  gap: 7px;
+  min-height: 172px;
   padding: 14px 12px;
 }
 
-.benefit-index {
+.intro-card-key {
   display: inline-flex;
   align-items: flex-end;
-  min-height: 22px;
-  margin-bottom: 2px;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 34px;
+  margin-bottom: 1px;
   color: var(--primary);
-  font-size: 1rem;
+  font-size: clamp(1.38rem, 4.6vw, 1.78rem);
   line-height: 1;
   font-weight: 900;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
-.benefit-title {
+.intro-card-title {
   margin-top: 0;
   font-size: 0.92rem;
-  line-height: 1.35;
-  min-height: calc(1.35em * 2);
+  line-height: 1.34;
+  min-height: calc(1.34em * 2);
   font-weight: 800;
+  letter-spacing: 0.01em;
   color: var(--text);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -415,7 +384,7 @@ body {
   overflow: hidden;
 }
 
-.benefit-text {
+.intro-card-body {
   margin-top: 0;
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -1931,32 +1900,22 @@ body {
 
   .fact-card,
   .benefit-card {
-    min-height: 156px;
+    min-height: 160px;
     padding: 12px 10px;
     gap: 5px;
   }
 
-  .fact-value {
-    min-height: 46px;
-    font-size: 1.32rem;
+  .intro-card-key {
+    min-height: 30px;
+    font-size: 1.24rem;
   }
 
-  .fact-label {
-    font-size: 0.78rem;
-  }
-
-  .fact-note,
-  .benefit-text {
-    font-size: 0.69rem;
-  }
-
-  .benefit-index {
-    font-size: 0.92rem;
-    min-height: 20px;
-  }
-
-  .benefit-title {
+  .intro-card-title {
     font-size: 0.84rem;
+  }
+
+  .intro-card-body {
+    font-size: 0.69rem;
   }
 
   .result-hero-image-wrap {

@@ -1,14 +1,15 @@
 import { createFlowController } from './flows/index.js'
+import { stripEndingPunctuation } from './utils.js'
 
 /* ---- 工具函数 ---- */
 
 function getQuestionMeta(pack, question) {
   if (question.special) {
-    return question.caption || '补充题'
+    return stripEndingPunctuation(question.caption || '补充题')
   }
 
   if (question.caption) {
-    return question.caption
+    return stripEndingPunctuation(question.caption)
   }
 
   const dimensionMeta = pack.dimensions?.meta?.[question.dim]
@@ -16,7 +17,7 @@ function getQuestionMeta(pack, question) {
 
   const label = dimensionMeta.label ?? dimensionMeta.title ?? question.dim ?? ''
   const model = dimensionMeta.model ?? ''
-  return [label, model].filter(Boolean).join(' · ')
+  return stripEndingPunctuation([label, model].filter(Boolean).join(' · '))
 }
 
 /* ---- 题目切换动画 ---- */
@@ -106,8 +107,8 @@ export function createQuizView({ onComplete }) {
 
       btn.innerHTML = `
         ${checkIcon}
-        <span class="option-label">${option.label}</span>
-        ${option.hint ? `<span class="option-hint">${option.hint}</span>` : ''}
+        <span class="option-label">${stripEndingPunctuation(option.label)}</span>
+        ${option.hint ? `<span class="option-hint">${stripEndingPunctuation(option.hint)}</span>` : ''}
       `
 
       btn.addEventListener('click', () => {
@@ -156,11 +157,12 @@ export function createQuizView({ onComplete }) {
       els.caption.hidden = !meta
     }
 
-    if (els.qText) els.qText.textContent = question.prompt
+    if (els.qText) els.qText.textContent = stripEndingPunctuation(question.prompt)
 
     if (els.description) {
-      els.description.textContent = question.description || ''
-      els.description.hidden = !question.description
+      const questionDescription = stripEndingPunctuation(question.description || '')
+      els.description.textContent = questionDescription
+      els.description.hidden = !questionDescription
     }
 
     renderOptions(question, snapshot)
