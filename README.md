@@ -1,33 +1,55 @@
 # GBTI
 
-`GBTI` 现在是一个“单测试部署、可复用骨架”的静态人格测试宿主。当前默认挂载的是 `gbti` 测试包，同时仓内也内置了 `sbti` 标准 pack；部署时只需要切 `data/active-test.json` 即可切换当前活动测试。
+`GBTI` 是一个可以直接拿来发布的人格测试静态站模板。它不是只服务于单一问卷的一次性页面，而是一个已经整理好流程、结果页、分享链路和数据结构的测试宿主。你可以把它当成一个轻量、可复用、可快速改造的前端骨架，用来承载不同风格的人格测试、趣味测验或品牌化问卷。
 
-当前内置：
+当前项目默认挂载的是 `gbti` 测试包，仓库里同时也内置了 `sbti`。题目、维度、结果、分享文案和图片资源都可以按测试包组织，前端负责加载数据并在浏览器本地完成结果计算，不依赖后端就能完成完整体验。这意味着它非常适合做快速上线的测试页、活动传播页、社交分享页，或者作为后续扩展为多测试平台的起点。
 
-- `gbti`：30 道常规题 + 2 道特殊题，16 个结果人格
-- `sbti`：30 道常规题 + 2 道特殊题，27 个结果人格
-- 统一 `dimension-pattern-matcher` 评分器
-- 模板化结果页、懒加载分享图、pack 本地图像资源
+这个项目的特点很直接：
 
-## 目录
+- 纯前端静态部署，天然适合 GitHub Pages、Vercel、Netlify
+- 结果计算在浏览器本地完成，不需要服务端参与
+- 内置结果页模板和分享图能力，适合社交传播
+- 支持按测试包切换内容，不需要重写整套页面
+- 已内置 `gbti` 与 `sbti` 两套示例数据，方便继续扩展
 
-- `data/active-test.json`：当前生效的测试包入口
-- `data/tests/<id>/manifest.json`：测试包元信息、结果模板、分享配置、评分器声明
-- `data/tests/<id>/questions.json`：常规题库
-- `data/tests/<id>/special-questions.json`：静态插题与条件题
-- `data/tests/<id>/outcomes.json`：结果档案
-- `data/tests/<id>/dimensions.json`：维度顺序、解释与分档规则
-- `data/tests/<id>/patterns.json`：常规人格 pattern
-- `src/test-pack/`：测试包 schema 与本地数据源
-- `src/scorers/`：评分器注册层与 `dimension-pattern-matcher`
-- `src/results/template.js`：标准 `ResultViewModel` 和模板区块构建
-- `src/app-controller.js`：宿主流程控制
-- `src/quiz.js`：答题 UI
-- `src/result.js`：模板化结果页渲染
-- `src/share.js`：分享图生成
-- `scripts/generate-packs.mjs`：从 `GBTI-test/gbti` 与 `SBTI-test` 提取 pack 数据
-- `scripts/validate.mjs`：schema、flow、scorer 与结果模型校验
+## 使用
 
-## 说明
+先安装依赖：
 
-默认运行方式仍然是纯前端静态站，不需要后端就能支撑多人同时访问。结果计算全部在浏览器本地完成，后续如果要加统计、存档或后台管理，再把数据源和上报接口接到 API 即可。
+```bash
+npm install
+```
+
+本地开发：
+
+```bash
+npm run dev
+```
+
+运行后会启动 Vite 开发服务，适合一边改文案、题目、样式，一边实时预览页面效果。
+
+如果你想切换当前线上使用的测试，只需要修改 `data/active-test.json`，把 `id` 和 `manifestPath` 指向你想启用的测试包即可。默认是 `gbti`，改成 `sbti` 后，页面就会切换为另一套测试内容，而不需要改业务流程代码。
+
+构建生产版本：
+
+```bash
+npm run build
+```
+
+构建完成后，静态文件会输出到 `dist`，可以直接部署到静态托管平台。
+
+本地预览构建产物：
+
+```bash
+npm run preview
+```
+
+校验测试数据是否合法：
+
+```bash
+npm run validate
+```
+
+如果你更新了题库或测试包数据，建议在发布前先执行一次校验，避免因为字段缺失、结构错误或结果映射异常影响线上体验。
+
+如果你已经接入 GitHub Pages，这个仓库现在也支持推送 `main` 后自动重新构建并部署最新版本。也就是说，日常使用流程可以很简单：改内容、提交代码、推送仓库，然后等待站点自动更新。
