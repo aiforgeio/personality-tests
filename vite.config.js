@@ -1,9 +1,7 @@
 import { defineConfig } from 'vite'
 
-const githubPagesBase = '/personality-tests/'
-
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? githubPagesBase : '/',
+export default defineConfig(() => ({
+  base: '/',
   build: {
     outDir: 'dist',
   },

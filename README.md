@@ -63,8 +63,16 @@ If you switch it to `sbti`, the application will load the `sbti` content pack wh
 
 ## Deployment Notes
 
-This repository is configured for GitHub Pages deployment from `main`.
+This repository supports both Vercel root-domain deployment and GitHub Pages deployment from `main`.
 
-If you rename the repository to `personality-tests`, keep the Pages base path aligned in [vite.config.js](/Users/macbook/Workspace/个人创作/SBTI/GBTI/vite.config.js) so the built site continues to work under:
+Use the default production build for Vercel:
+
+`npm run build`
+
+Use the dedicated Pages build for GitHub Pages:
+
+`npm run build:pages`
+
+If you rename the repository, keep the Pages base path in [package.json](/Users/macbook/Workspace/个人创作/SBTI/GBTI/package.json) aligned so the built site continues to work under:
 
 `https://aiforgeio.github.io/personality-tests/`
