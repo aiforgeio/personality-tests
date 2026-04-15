@@ -1081,12 +1081,15 @@ body {
 /* 分享卡片（截图核心区域） */
 .result-share-card {
   border-radius: var(--radius-lg);
-  padding: var(--space-lg) var(--space-md) calc(var(--space-md) + 4px);
+  padding: clamp(14px, 4vw, 24px) clamp(12px, 3.5vw, 20px) clamp(12px, 3.2vw, 18px);
   position: relative;
   overflow: hidden;
   background: linear-gradient(175deg, #ffffff 0%, #f8faf8 50%, #f0f7f0 100%);
   border: 1px solid rgba(76, 175, 80, 0.12);
   box-shadow: var(--glass-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(7px, 2vw, 12px);
 }
 
 .share-card-orbs {
@@ -1120,7 +1123,7 @@ body {
 .share-card-header {
   display: flex;
   justify-content: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: 0;
 }
 
 .share-card-badge {
@@ -1141,14 +1144,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: clamp(6px, 1.8vw, 12px);
+  margin-bottom: 0;
 }
 
 /* 英雄图片 */
 .result-hero-image-wrap {
-  width: min(56%, 208px);
-  max-width: 208px;
+  width: clamp(138px, 44vw, 208px);
   border-radius: var(--radius);
   overflow: hidden;
   aspect-ratio: 1 / 1;
@@ -1301,12 +1303,12 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 8px;
+  gap: clamp(5px, 1.5vw, 8px);
   width: 100%;
 }
 
 .hero-summary-title {
-  font-size: clamp(2.1rem, 8.6vw, 3rem);
+  font-size: clamp(1.8rem, 7.8vw, 2.8rem);
   line-height: 1.02;
   font-weight: 900;
   color: var(--text);
@@ -1315,7 +1317,7 @@ body {
 
 .hero-summary-code {
   color: var(--primary);
-  font-size: clamp(1.12rem, 4.9vw, 1.55rem);
+  font-size: clamp(1rem, 4.2vw, 1.45rem);
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -1330,7 +1332,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
+  gap: clamp(4px, 1.2vw, 6px);
 }
 
 .hero-chip {
@@ -1353,18 +1355,18 @@ body {
 
 .hero-summary-lead {
   color: var(--text-secondary);
-  font-size: 0.92rem;
+  font-size: clamp(0.78rem, 3.2vw, 0.9rem);
   font-weight: 700;
   font-style: normal;
-  line-height: 1.55;
-  padding: 15px 18px;
+  line-height: 1.5;
+  padding: clamp(10px, 2.5vw, 15px) clamp(12px, 3vw, 18px);
   background: rgba(76, 175, 80, 0.04);
   border: 1px solid rgba(76, 175, 80, 0.1);
   border-radius: var(--radius-sm);
   border-left: 3px solid var(--primary);
   width: 100%;
   text-align: left;
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .hero-summary-desc {
@@ -1423,36 +1425,36 @@ body {
 }
 
 .result-key-stats {
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 /* 标签区域 */
 .result-tags-section {
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .tag-list {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: clamp(5px, 1.5vw, 8px);
 }
 
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 7px 14px;
+  padding: clamp(5px, 1.4vw, 7px) clamp(10px, 2.8vw, 14px);
   border-radius: 999px;
   background: var(--tag-bg);
   border: 1px solid var(--tag-border);
   color: var(--tag-text);
-  font-size: 0.8rem;
+  font-size: clamp(0.72rem, 3vw, 0.8rem);
   font-weight: 700;
 }
 
 /* 维度图表区域 */
 .result-chart-section {
-  margin-bottom: var(--space-md);
+  margin-bottom: 0;
 }
 
 .chart-title {
@@ -1535,9 +1537,9 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-top: var(--space-sm);
+  padding-top: clamp(8px, 2vw, 12px);
   border-top: 1px solid rgba(0, 0, 0, 0.06);
-  margin-top: 14px;
+  margin-top: 0;
 }
 
 .share-card-qr {
@@ -1918,13 +1920,6 @@ body {
     font-size: 0.69rem;
   }
 
-  .result-hero-image-wrap {
-    width: min(54%, 180px);
-  }
-
-  .hero-summary-title {
-    font-size: 1.8rem;
-  }
 }
 
 /* 标准手机（375px - 430px） */
@@ -1970,14 +1965,6 @@ body {
     padding-bottom: calc(var(--safe-bottom) + 156px);
   }
 
-  .result-share-card {
-    padding: 20px 14px 16px;
-  }
-
-  .result-hero-image-wrap {
-    width: min(58%, 204px);
-  }
-
   .result-key-stats .stats-inline {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1985,25 +1972,17 @@ body {
   }
 
   .result-key-stats .stat-chip {
-    padding: 10px 10px 9px;
+    padding: 9px 8px;
   }
 
   .result-key-stats .stat-value {
-    font-size: 0.84rem;
+    font-size: 0.82rem;
   }
 
   .result-key-stats .stat-note {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .tag-list {
-    gap: 7px;
-  }
-
-  .tag {
-    font-size: 0.78rem;
   }
 
   .share-card-footer {
@@ -2090,18 +2069,6 @@ body {
 @media (min-width: 600px) {
   :root {
     --max-width: 540px;
-  }
-
-  .result-share-card {
-    padding: var(--space-xl) var(--space-lg) var(--space-lg);
-  }
-
-  .result-hero-image-wrap {
-    width: 160px;
-  }
-
-  .hero-summary-title {
-    font-size: 2.4rem;
   }
 
   .intro-facts,

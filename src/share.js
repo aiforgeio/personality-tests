@@ -188,7 +188,7 @@ async function drawHeroPanel(ctx, hero, x, y, width, height) {
 /* ---- 文本区块 ---- */
 
 function drawQuoteCard(ctx, text, x, y, width) {
-  const lines = clampLines(stripEndingPunctuation(text), 16, 2)
+  const lines = clampLines(stripEndingPunctuation(text), 18, 3)
   const lineHeight = 28
   const height = Math.max(74, lines.length * lineHeight + 24)
 
@@ -210,7 +210,7 @@ function drawQuoteCard(ctx, text, x, y, width) {
 }
 
 function drawTags(ctx, tags, centerX, y, maxWidth) {
-  const visibleTags = tags.map((tag) => stripEndingPunctuation(tag)).filter(Boolean).slice(0, 3)
+  const visibleTags = tags.map((tag) => stripEndingPunctuation(tag)).filter(Boolean).slice(0, 4)
   if (!visibleTags.length) return y
 
   ctx.font = `700 17px ${FONT}`
@@ -304,10 +304,10 @@ function drawDimensionGrid(ctx, dimensions, x, y, width) {
   ctx.fillText('关键维度', x, y + 14)
   y += 24
 
-  const gap = 10
+  const gap = 12
   const columns = 2
   const cardWidth = (width - gap) / columns
-  const cardHeight = 68
+  const cardHeight = 82
 
   visibleItems.forEach((item, index) => {
     const column = index % columns
@@ -325,19 +325,19 @@ function drawDimensionGrid(ctx, dimensions, x, y, width) {
 
     ctx.textAlign = 'left'
     ctx.fillStyle = PALETTE.textSecondary
-    ctx.font = `600 15px ${FONT}`
-    const label = item.label.length > 8 ? item.label.slice(0, 8) : item.label
-    ctx.fillText(label, cardX + 12, cardY + 22)
+    ctx.font = `600 16px ${FONT}`
+    const label = item.label.length > 9 ? item.label.slice(0, 9) : item.label
+    ctx.fillText(label, cardX + 12, cardY + 26)
 
     ctx.textAlign = 'right'
     ctx.fillStyle = PALETTE.primary
-    ctx.font = `800 15px ${FONT}`
-    ctx.fillText(item.levelCode || '', cardX + cardWidth - 12, cardY + 22)
+    ctx.font = `800 16px ${FONT}`
+    ctx.fillText(item.levelCode || '', cardX + cardWidth - 12, cardY + 26)
 
     const barX = cardX + 12
-    const barY = cardY + 35
+    const barY = cardY + 42
     const barWidth = cardWidth - 24
-    roundRect(ctx, barX, barY, barWidth, 7, 3.5)
+    roundRect(ctx, barX, barY, barWidth, 8, 4)
     ctx.fillStyle = PALETTE.barBg
     ctx.fill()
 
@@ -345,14 +345,14 @@ function drawDimensionGrid(ctx, dimensions, x, y, width) {
     const fillGradient = ctx.createLinearGradient(barX, barY, barX + fillWidth, barY)
     fillGradient.addColorStop(0, PALETTE.primaryLight)
     fillGradient.addColorStop(1, PALETTE.primary)
-    roundRect(ctx, barX, barY, fillWidth, 7, 3.5)
+    roundRect(ctx, barX, barY, fillWidth, 8, 4)
     ctx.fillStyle = fillGradient
     ctx.fill()
 
     ctx.textAlign = 'left'
     ctx.fillStyle = PALETTE.textMuted
-    ctx.font = `600 12px ${FONT}`
-    ctx.fillText(`${Math.round(Number(item.percentage ?? 0))}%`, barX, cardY + 56)
+    ctx.font = `600 13px ${FONT}`
+    ctx.fillText(`${Math.round(Number(item.percentage ?? 0))}%`, barX, cardY + 68)
   })
 
   const rows = Math.ceil(visibleItems.length / columns)
@@ -363,14 +363,14 @@ function drawDimensionGrid(ctx, dimensions, x, y, width) {
 
 export async function generateShareImage(result) {
   const { hero, share } = result
-  const tags = getHighlightTags(result, 3)
+  const tags = getHighlightTags(result, 4)
   const dimensions = getHighlightDimensions(result, 4)
   const comparison = getPosterComparison(result)
   const quote = stripEndingPunctuation(getPosterQuote(result))
 
   const dpr = 2
   const width = 720
-  const height = 900
+  const height = 1280
 
   const canvas = document.createElement('canvas')
   canvas.width = width * dpr
@@ -381,62 +381,57 @@ export async function generateShareImage(result) {
 
   drawBackground(ctx, width, height)
 
-  const cardX = 24
-  const cardY = 24
-  const cardW = width - 48
-  const cardH = height - 48
+  const cardX = 28
+  const cardY = 28
+  const cardW = width - 56
+  const cardH = height - 56
   const centerX = width / 2
-  drawCardBackground(ctx, cardX, cardY, cardW, cardH, 30)
+  drawCardBackground(ctx, cardX, cardY, cardW, cardH, 32)
 
-  let y = cardY + 36
+  let y = cardY + 52
 
   ctx.textAlign = 'center'
   ctx.fillStyle = PALETTE.textMuted
-  ctx.font = `600 17px ${FONT}`
+  ctx.font = `600 18px ${FONT}`
   ctx.fillText('你的人格类型是', centerX, y)
-  y += 20
+  y += 30
 
-  const heroW = 292
-  const heroH = 232
+  const heroW = 320
+  const heroH = 280
   await drawHeroPanel(ctx, hero, centerX - heroW / 2, y, heroW, heroH)
-  y += heroH + 20
+  y += heroH + 36
 
   const hasNaturalHeroTitle = Boolean(hero?.data?.alias || hero?.data?.name || hero?.data?.title)
   const title = hasNaturalHeroTitle
     ? (stripEndingPunctuation(hero.title || '') || formatCode(hero.code))
     : (hero.title || formatCode(hero.code))
-  const titleSize = fitTextSize(ctx, title, cardW - 84, 82, 52, 900)
+  const titleSize = fitTextSize(ctx, title, cardW - 80, 86, 54, 900)
   ctx.fillStyle = PALETTE.text
   ctx.font = `900 ${titleSize}px ${FONT}`
   ctx.fillText(title, centerX, y)
-  y += titleSize * 0.9 + 8
+  y += titleSize * 0.9 + 12
 
   const code = formatCode(hero.code)
-  const codeSize = fitTextSize(ctx, code, cardW - 132, 40, 30, 800)
+  const codeSize = fitTextSize(ctx, code, cardW - 120, 42, 32, 800)
   ctx.fillStyle = PALETTE.primary
   ctx.font = `800 ${codeSize}px ${FONT}`
   ctx.fillText(code, centerX, y)
-  y += codeSize * 0.88 + 8
+  y += codeSize * 0.88 + 16
 
-  y = drawComparisonPill(ctx, comparison, centerX, y, cardW - 140)
+  y = drawComparisonPill(ctx, comparison, centerX, y, cardW - 120)
 
   if (quote) {
-    y += 6
-    y = drawQuoteCard(ctx, quote, cardX + 44, y, cardW - 88)
-    y += 12
+    y += 18
+    y = drawQuoteCard(ctx, quote, cardX + 40, y, cardW - 80)
+    y += 24
   }
 
-  y = drawTags(ctx, tags, centerX, y, cardW - 96)
-  y += 10
-  y = drawDimensionGrid(ctx, dimensions, cardX + 38, y, cardW - 76)
+  y = drawTags(ctx, tags, centerX, y, cardW - 80)
+  y += 24
+  y = drawDimensionGrid(ctx, dimensions, cardX + 36, y, cardW - 72)
 
-  const footerHeight = 96
-  const anchoredFooterY = cardY + cardH - footerHeight - 16
-  const minFooterY = y + 12
-  const footerY = Math.min(
-    Math.max(minFooterY, anchoredFooterY),
-    cardY + cardH - footerHeight - 8,
-  )
+  const footerHeight = 110
+  const footerY = cardY + cardH - footerHeight - 28
 
   ctx.strokeStyle = PALETTE.divider
   ctx.lineWidth = 1
@@ -448,13 +443,13 @@ export async function generateShareImage(result) {
   try {
     const qrUrl = window.location.href.split('?')[0]
     const qrDataUrl = await QRCode.toDataURL(qrUrl, {
-      width: 108,
+      width: 120,
       margin: 1,
       color: { dark: '#151515', light: '#ffffff' },
     })
     const qrImage = await resolveImage(qrDataUrl)
     if (qrImage) {
-      ctx.drawImage(qrImage, cardX + 36, footerY + 16, 68, 68)
+      ctx.drawImage(qrImage, cardX + 36, footerY + 18, 74, 74)
     }
   } catch (err) {
     console.error('Failed to generate QR code:', err)
@@ -462,12 +457,12 @@ export async function generateShareImage(result) {
 
   ctx.textAlign = 'left'
   ctx.fillStyle = PALETTE.text
-  ctx.font = `700 23px ${FONT}`
-  ctx.fillText('扫码测测你是什么型', cardX + 118, footerY + 44)
+  ctx.font = `700 24px ${FONT}`
+  ctx.fillText('扫码测测你是什么型', cardX + 124, footerY + 50)
 
   ctx.fillStyle = PALETTE.textMuted
-  ctx.font = `600 17px ${FONT}`
-  ctx.fillText(stripEndingPunctuation(share?.title || '人格测试'), cardX + 118, footerY + 71)
+  ctx.font = `600 18px ${FONT}`
+  ctx.fillText(stripEndingPunctuation(share?.title || '人格测试'), cardX + 124, footerY + 80)
 
   const dataUrl = canvas.toDataURL('image/png', 1.0)
 
