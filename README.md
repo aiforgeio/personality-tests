@@ -1,55 +1,70 @@
-# GBTI
+# Personality Tests
 
-`GBTI` 是一个可以直接拿来发布的人格测试静态站模板。它不是只服务于单一问卷的一次性页面，而是一个已经整理好流程、结果页、分享链路和数据结构的测试宿主。你可以把它当成一个轻量、可复用、可快速改造的前端骨架，用来承载不同风格的人格测试、趣味测验或品牌化问卷。
+`personality-tests` is a lightweight frontend host for interactive personality and archetype quizzes.
 
-当前项目默认挂载的是 `gbti` 测试包，仓库里同时也内置了 `sbti`。题目、维度、结果、分享文案和图片资源都可以按测试包组织，前端负责加载数据并在浏览器本地完成结果计算，不依赖后端就能完成完整体验。这意味着它非常适合做快速上线的测试页、活动传播页、社交分享页，或者作为后续扩展为多测试平台的起点。
+It is designed as a reusable static site foundation rather than a one-off test page. The repository can host multiple test packs with shared flow logic, local scoring, result pages, and shareable poster generation. That makes it suitable for projects like `GBTI`, `SBTI`, `MBTI`, and future variants in the same family.
 
-这个项目的特点很直接：
+The current default active pack is `gbti`, and the repository also includes `sbti` as a built-in example. Questions, dimensions, outcomes, share copy, and media assets are all organized by test pack. The frontend loads the selected pack and computes results fully in the browser, so the whole experience can run as a static site without a backend.
 
-- 纯前端静态部署，天然适合 GitHub Pages、Vercel、Netlify
-- 结果计算在浏览器本地完成，不需要服务端参与
-- 内置结果页模板和分享图能力，适合社交传播
-- 支持按测试包切换内容，不需要重写整套页面
-- 已内置 `gbti` 与 `sbti` 两套示例数据，方便继续扩展
+## What This Repo Provides
 
-## 使用
+- Static frontend deployment for GitHub Pages, Vercel, or Netlify
+- Local result calculation in the browser
+- Reusable result-page and poster-sharing flows
+- Pack-based content switching without rewriting the app shell
+- Built-in `gbti` and `sbti` example packs for extension
 
-先安装依赖：
+## Development
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-本地开发：
+Start local development:
 
 ```bash
 npm run dev
 ```
 
-运行后会启动 Vite 开发服务，适合一边改文案、题目、样式，一边实时预览页面效果。
-
-如果你想切换当前线上使用的测试，只需要修改 `data/active-test.json`，把 `id` 和 `manifestPath` 指向你想启用的测试包即可。默认是 `gbti`，改成 `sbti` 后，页面就会切换为另一套测试内容，而不需要改业务流程代码。
-
-构建生产版本：
+Build for production:
 
 ```bash
 npm run build
 ```
 
-构建完成后，静态文件会输出到 `dist`，可以直接部署到静态托管平台。
-
-本地预览构建产物：
+Preview the production build locally:
 
 ```bash
 npm run preview
 ```
 
-校验测试数据是否合法：
+Validate pack data before release:
 
 ```bash
 npm run validate
 ```
 
-如果你更新了题库或测试包数据，建议在发布前先执行一次校验，避免因为字段缺失、结构错误或结果映射异常影响线上体验。
+## Switching The Active Test
 
-如果你已经接入 GitHub Pages，这个仓库现在也支持推送 `main` 后自动重新构建并部署最新版本。也就是说，日常使用流程可以很简单：改内容、提交代码、推送仓库，然后等待站点自动更新。
+To change which test is currently loaded, update [data/active-test.json](/Users/macbook/Workspace/个人创作/SBTI/GBTI/data/active-test.json). Point `id` and `manifestPath` to the test pack you want to activate.
+
+The default configuration is:
+
+```json
+{
+  "id": "gbti",
+  "manifestPath": "tests/gbti/manifest.json"
+}
+```
+
+If you switch it to `sbti`, the application will load the `sbti` content pack while keeping the same runtime flow, result rendering, and sharing pipeline.
+
+## Deployment Notes
+
+This repository is configured for GitHub Pages deployment from `main`.
+
+If you rename the repository to `personality-tests`, keep the Pages base path aligned in [vite.config.js](/Users/macbook/Workspace/个人创作/SBTI/GBTI/vite.config.js) so the built site continues to work under:
+
+`https://aiforgeio.github.io/personality-tests/`
