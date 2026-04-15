@@ -391,7 +391,6 @@ export function createResultView({ onRestart, onDownload }) {
     tags: document.getElementById('result-tags-section'),
     chartSection: document.getElementById('result-chart-section'),
     detailSections: document.getElementById('result-detail-sections'),
-    disclaimer: document.getElementById('disclaimer'),
     download: document.getElementById('btn-download'),
     share: document.getElementById('btn-share'),
     restart: document.getElementById('btn-restart'),
@@ -451,10 +450,6 @@ export function createResultView({ onRestart, onDownload }) {
 
     if (els.detailSections) {
       renderDetailSections(els.detailSections, result)
-    }
-
-    if (els.disclaimer) {
-      setText(els.disclaimer, result.disclaimer)
     }
 
     updateActionLabels()

@@ -1691,15 +1691,6 @@ body {
   color: var(--primary-light);
 }
 
-/* 免责声明 */
-.disclaimer {
-  color: var(--text-dim);
-  font-size: 0.74rem;
-  text-align: center;
-  padding: var(--space-sm);
-  line-height: 1.5;
-}
-
 /* 操作按钮区域 */
 .result-actions {
   display: flex;
