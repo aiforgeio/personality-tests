@@ -3,6 +3,7 @@ import { createNoopResultReporter } from './reporters/index.js'
 import { createResultView } from './result.js'
 import { createScorerRegistry } from './scorers/index.js'
 import { createLocalTestPackSource } from './test-pack/source.js'
+import { formatCode } from './utils.js'
 
 /* ---- 工具函数 ---- */
 
@@ -430,12 +431,12 @@ export function createAppController({
       // 2. 等待 loading 动画至少播放 2.5 秒（营造期待感）
       await new Promise((resolve) => setTimeout(resolve, 2500))
 
-      // 3. 渲染结果并跳转
       resultView.render(latestResult, pack)
       stopLoadingAnimation(stopLoadingFn)
       showPage('result')
 
-      // 4. 触发庆祝动画
+      renderPageQR()
+
       setTimeout(triggerConfetti, 300)
 
       // 5. 上报结果（静默失败）
@@ -521,6 +522,28 @@ export function createAppController({
     showPage('quiz')
   }
 
+  /* ---- 页面内二维码 ---- */
+
+  async function renderPageQR() {
+    const container = document.getElementById('qr-placeholder')
+    const fallbackIcon = document.getElementById('qr-icon-fallback')
+    if (!container) return
+
+    try {
+      const QRCode = (await import('qrcode')).default
+      const qrUrl = window.location.href.split('?')[0]
+      const qrCanvas = await QRCode.toCanvas(qrUrl, {
+        width: 88,
+        margin: 1,
+        color: { dark: '#1a1a1a', light: '#ffffff' },
+      })
+      if (fallbackIcon) fallbackIcon.remove()
+      container.appendChild(qrCanvas)
+    } catch (err) {
+      console.warn('QR render failed:', err)
+    }
+  }
+
   /* ---- 分享按钮 ---- */
 
   function setupShareButton() {
@@ -529,23 +552,20 @@ export function createAppController({
     els.shareButton.addEventListener('click', () => {
       const url = window.location.href
       const title = activeManifest?.meta?.browserTitle || 'GBTI 股民人格测试'
+      const heroTitle = latestResult?.hero?.title || ''
+      const heroCode = latestResult?.hero?.code ? formatCode(latestResult.hero.code) : ''
+      const shareText = heroTitle
+        ? `我是「${heroTitle}」(${heroCode})！${latestResult?.hero?.badge || '快来测测你是什么人格'}`
+        : '测一测你在股市里是什么人格！'
 
-      // 优先使用 Web Share API（移动端原生分享）
       if (navigator.share) {
-        navigator.share({
-          title,
-          text: latestResult?.hero?.badge || '测一测你在股市里是什么人格！',
-          url,
-        }).catch(() => {
-          // 用户取消分享，忽略
-        })
+        navigator.share({ title, text: shareText, url }).catch(() => {})
         return
       }
 
-      // 降级：复制链接
       if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('链接已复制，快去分享吧！')
+        navigator.clipboard.writeText(`${shareText} ${url}`).then(() => {
+          showToast('已复制到剪贴板，快去分享吧')
         }).catch(() => {
           showToast('请手动复制链接分享')
         })

@@ -95,25 +95,16 @@ function renderHeroSummaryInCard(container, content) {
 
   container.innerHTML = ''
 
-  // 标题 (对应截图中的 "孤儿")
   const titleEl = document.createElement('div')
   titleEl.className = 'hero-summary-title'
   titleEl.textContent = hero.title || ''
-  titleEl.style.color = '#333'
-  titleEl.style.fontSize = '2.5rem'
-  titleEl.style.textAlign = 'center'
   container.appendChild(titleEl)
 
-  // 代码 (对应截图中的 "SOLO")
   const codeEl = document.createElement('div')
   codeEl.className = 'hero-summary-code'
   codeEl.textContent = formatCode(hero.code)
-  codeEl.style.color = '#4CAF50'
-  codeEl.style.fontSize = '2rem'
-  codeEl.style.textAlign = 'center'
   container.appendChild(codeEl)
 
-  // 副标题
   if (hero.sub || hero.subtitle) {
     const subEl = document.createElement('div')
     subEl.className = 'hero-summary-sub'
@@ -121,7 +112,6 @@ function renderHeroSummaryInCard(container, content) {
     container.appendChild(subEl)
   }
 
-  // 徽章
   if (badges.length > 0) {
     const badgesEl = document.createElement('div')
     badgesEl.className = 'hero-summary-badges'
@@ -132,7 +122,6 @@ function renderHeroSummaryInCard(container, content) {
       badgesEl.appendChild(chip)
     })
 
-    // 特殊状态徽章
     if (content.specialState?.active && content.specialState.reason !== 'normal') {
       const chip = document.createElement('span')
       chip.className = 'hero-chip is-special'
@@ -143,21 +132,13 @@ function renderHeroSummaryInCard(container, content) {
     container.appendChild(badgesEl)
   }
 
-  // 标语 (对应截图中的 "我哭了，我怎么会是孤儿？")
   if (hero.badge) {
     const leadEl = document.createElement('div')
     leadEl.className = 'hero-summary-lead'
     leadEl.textContent = hero.badge
-    leadEl.style.marginTop = '20px'
-    leadEl.style.padding = '15px'
-    leadEl.style.background = '#f5f5f5'
-    leadEl.style.borderRadius = '8px'
-    leadEl.style.color = '#666'
-    leadEl.style.fontStyle = 'normal'
     container.appendChild(leadEl)
   }
 
-  // 描述
   if (hero.description) {
     const descEl = document.createElement('div')
     descEl.className = 'hero-summary-desc'
@@ -165,7 +146,6 @@ function renderHeroSummaryInCard(container, content) {
     container.appendChild(descEl)
   }
 
-  // 次级英雄
   if (secondaryHero) {
     const secondary = document.createElement('div')
     secondary.className = 'secondary-hero'
@@ -369,28 +349,18 @@ function renderDetailSections(container, sections) {
 /* ---- 渲染分享卡片（精美卡片区域） ---- */
 
 function renderShareCard(result) {
-  const { hero, sections, share } = result
+  const { hero, sections } = result
 
-  // 更新卡片徽章 (对应截图中的 "你的人格类型是：")
   const badge = document.getElementById('share-card-badge')
   if (badge) {
     badge.textContent = '你的人格类型是：'
-    badge.style.background = 'transparent'
-    badge.style.border = 'none'
-    badge.style.color = '#666'
-    badge.style.fontSize = '1.2rem'
-    badge.style.fontWeight = 'normal'
   }
 
-  // 渲染英雄图片
   const imageWrap = document.getElementById('result-hero-image-wrap')
   if (imageWrap) {
     renderHeroMedia(imageWrap, hero)
-    imageWrap.style.background = 'transparent'
-    imageWrap.style.border = 'none'
   }
 
-  // 渲染英雄摘要
   const summaryEl = document.getElementById('result-hero-summary')
   if (summaryEl) {
     const heroSummarySection = sections.find((s) => s.type === 'hero-summary')
@@ -399,25 +369,24 @@ function renderShareCard(result) {
     }
   }
 
-  // 渲染标签
   const tagsSection = document.getElementById('result-tags-section')
   if (tagsSection) {
+    tagsSection.innerHTML = ''
     const tagListSection = sections.find((s) => s.type === 'tag-list')
     if (tagListSection && tagListSection.items?.length > 0) {
       const tagList = document.createElement('div')
       tagList.className = 'tag-list'
       renderTags(tagList, tagListSection.items)
       tagsSection.appendChild(tagList)
+      tagsSection.hidden = false
     } else {
       tagsSection.hidden = true
     }
   }
 
-  // 在浅色主题中，我们把匹配度等信息移出截图核心区域，放到下方的 detail 区域
-  // 所以这里隐藏或移除分享卡片内的图表
   const chartSection = document.getElementById('result-chart-section')
   if (chartSection) {
-    chartSection.style.display = 'none'
+    chartSection.hidden = true
   }
 }
 
@@ -487,11 +456,7 @@ export function createResultView({ onRestart, onDownload }) {
       setText(els.disclaimer, result.disclaimer)
     }
 
-    // 入场动画：卡片交错出现
-    const shareCard = document.getElementById('result-share-card')
-    if (shareCard) {
-      shareCard.style.animation = 'pageEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both'
-    }
+    // Entry animation is handled by CSS (resultCardEnter keyframes)
   }
 
   return { configure, render }

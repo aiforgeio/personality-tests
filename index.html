@@ -2,8 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <!-- 移动端优先，禁止用户缩放，适配刘海屏 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>GBTI 股民人格测试</title>
   <meta name="description" content="30 道题、15 个维度、16 种交易人格的趣味测试。3 分钟快速评估你的交易风格与风险倾向。" />
 
@@ -26,7 +25,7 @@
   <meta name="format-detection" content="telephone=no" />
 
   <!-- Theme color for browser chrome -->
-  <meta name="theme-color" content="#0f0c29" />
+  <meta name="theme-color" content="#f3f4f6" />
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>" />
   <link rel="stylesheet" href="/src/style.css" />
@@ -175,15 +174,13 @@
 
         <!-- 结果分享卡片区域（截图核心区域） -->
         <div class="result-share-card" id="result-share-card">
-          <!-- 卡片内装饰 -->
           <div class="share-card-orbs" aria-hidden="true">
             <div class="share-orb share-orb-1"></div>
             <div class="share-orb share-orb-2"></div>
           </div>
 
-          <!-- 卡片顶部标签 -->
           <div class="share-card-header">
-            <span class="share-card-badge" id="share-card-badge">GBTI · 股民人格测试</span>
+            <span class="share-card-badge" id="share-card-badge">你的人格类型是：</span>
           </div>
 
           <!-- 英雄区域 -->
@@ -206,8 +203,8 @@
           <!-- 卡片底部 -->
           <div class="share-card-footer">
             <div class="share-card-qr" aria-label="扫码测试">
-              <div class="qr-placeholder">
-                <span class="qr-icon">📱</span>
+              <div class="qr-placeholder" id="qr-placeholder">
+                <span class="qr-icon" id="qr-icon-fallback">📱</span>
               </div>
               <span class="qr-label">扫码测测你是什么型</span>
             </div>
@@ -223,14 +220,16 @@
 
         <!-- 操作按钮区域 -->
         <div class="result-actions">
-          <button id="btn-download" class="btn btn-primary btn-action">
-            <span class="btn-icon-left">🖼️</span>
-            <span>保存结果图片</span>
-          </button>
-          <button id="btn-share" class="btn btn-secondary btn-action">
-            <span class="btn-icon-left">🔗</span>
-            <span>分享给好友</span>
-          </button>
+          <div class="result-actions-row">
+            <button id="btn-download" class="btn btn-primary btn-action">
+              <span class="btn-icon-left">🖼️</span>
+              <span>保存图片</span>
+            </button>
+            <button id="btn-share" class="btn btn-secondary btn-action">
+              <span class="btn-icon-left">🔗</span>
+              <span>分享好友</span>
+            </button>
+          </div>
           <button id="btn-restart" class="btn btn-ghost btn-action">
             <span class="btn-icon-left">🔄</span>
             <span>再测一次</span>
