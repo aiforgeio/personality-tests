@@ -6,6 +6,30 @@ import {
 } from './result-highlights.js'
 import { formatCode, stripEndingPunctuation } from './utils.js'
 
+const DEFAULT_ACTION_COPY = {
+  promptTitle: '这个结果很适合发给朋友对照一下',
+  promptBody: '生成海报发给朋友，看看谁更像股神、接盘侠或梭哈King',
+  primaryActionLabel: '保存海报',
+  secondaryActionLabel: '分享链接',
+  floatingLabel: '保存海报',
+}
+
+const DEFAULT_INLINE_SHARE_COPY = {
+  title: '这个结果很适合发给朋友对照一下',
+  body: '生成海报发给朋友，看看谁更像股神、接盘侠或梭哈King',
+  primaryActionLabel: '生成结果海报',
+  nudgeLabel: '生成海报，发给朋友',
+}
+
+const DEFAULT_DISCLOSURE_LABEL = '展开更多分析'
+const DETAIL_PRIORITY_COUNT = 2
+
+const LEVEL_DISPLAY_LABELS = {
+  L: '低',
+  M: '中',
+  H: '高',
+}
+
 function renderTextList(container, values) {
   const list = document.createElement('ul')
   list.className = 'bullet-list'
@@ -182,13 +206,16 @@ function renderDimensionList(container, items) {
     const row = document.createElement('div')
     row.className = 'dimension-row detail'
     const descriptionText = stripEndingPunctuation(item.description || item.explanation || '')
+    const displayLabel = stripEndingPunctuation(item.summaryLabel || item.shortLabel || item.label || item.id || '')
+    const displayLevel = stripEndingPunctuation(
+      LEVEL_DISPLAY_LABELS[item.levelLabel || item.levelCode] || item.levelLabel || item.levelCode || '',
+    )
     row.innerHTML = `
       <div class="dimension-row-head">
         <div>
-          <div class="dimension-label">${stripEndingPunctuation(item.label)}</div>
-          <div class="dimension-meta">${[item.model, item.levelLabel || item.levelCode].filter(Boolean).join(' · ')}</div>
+          <div class="dimension-label">${displayLabel}</div>
         </div>
-        <div class="dimension-score">${item.levelCode} / ${item.score}</div>
+        <div class="dimension-score">${displayLevel}</div>
       </div>
       <div class="dimension-track">
         <div class="dimension-fill" data-pct="${item.percentage}" style="width: 0%"></div>
@@ -287,11 +314,22 @@ function mergeDetailSections(result) {
   return sections
 }
 
+export function splitDetailSectionsForDisplay(sections, { priorityCount = DETAIL_PRIORITY_COUNT } = {}) {
+  const normalizedSections = Array.isArray(sections) ? sections.filter(Boolean) : []
+  return {
+    prioritySections: normalizedSections.slice(0, Math.max(priorityCount, 0)),
+    overflowSections: normalizedSections.slice(Math.max(priorityCount, 0)),
+  }
+}
+
 /* ---- 创建 Section 外壳 ---- */
 
-function createSectionShell(section) {
+function createSectionShell(section, { priority = false } = {}) {
   const wrapper = document.createElement('section')
   wrapper.className = `result-section result-section-${section.type}`
+  if (priority) {
+    wrapper.classList.add('is-priority')
+  }
 
   if (section.title) {
     const title = document.createElement('h3')
@@ -310,8 +348,8 @@ function createSectionShell(section) {
   return wrapper
 }
 
-function renderSection(section) {
-  const shell = createSectionShell(section)
+function renderSection(section, { priority = false } = {}) {
+  const shell = createSectionShell(section, { priority })
   const container = document.createElement('div')
 
   if (section.type === 'bullet-list' && section.items?.length) {
@@ -329,7 +367,30 @@ function renderSection(section) {
 function renderDetailSections(container, result) {
   container.innerHTML = ''
   const sections = mergeDetailSections(result)
-  sections.forEach((section) => container.appendChild(renderSection(section)))
+  const { prioritySections, overflowSections } = splitDetailSectionsForDisplay(sections)
+
+  prioritySections.forEach((section) => {
+    container.appendChild(renderSection(section, { priority: true }))
+  })
+
+  if (overflowSections.length > 0) {
+    const disclosure = document.createElement('details')
+    disclosure.className = 'result-sections-more'
+
+    const summary = document.createElement('summary')
+    summary.className = 'result-sections-more-summary'
+    summary.textContent = DEFAULT_DISCLOSURE_LABEL
+    disclosure.appendChild(summary)
+
+    const content = document.createElement('div')
+    content.className = 'result-sections-more-content'
+    overflowSections.forEach((section) => {
+      content.appendChild(renderSection(section))
+    })
+
+    disclosure.appendChild(content)
+    container.appendChild(disclosure)
+  }
 }
 
 /* ---- 渲染分享卡片 ---- */
@@ -382,16 +443,80 @@ function setOptionalText(element, value) {
   element.hidden = !text
 }
 
+function resolveActionLabel(value, fallback) {
+  const text = String(value ?? '').trim()
+  return text || fallback
+}
+
+export function resolveInlineShareState({
+  shareConfig = {},
+  actionDefaults = DEFAULT_ACTION_COPY,
+  inlineDefaults = DEFAULT_INLINE_SHARE_COPY,
+} = {}) {
+  const title = resolveActionLabel(shareConfig.inlinePromptTitle, inlineDefaults.title)
+  const body = resolveActionLabel(shareConfig.inlinePromptBody, inlineDefaults.body)
+  const primaryLabel = resolveActionLabel(
+    shareConfig.inlinePrimaryActionLabel,
+    resolveActionLabel(shareConfig.primaryActionLabel, inlineDefaults.primaryActionLabel),
+  )
+
+  return {
+    title,
+    body,
+    primaryLabel,
+    hidden: !title && !body && !primaryLabel && !actionDefaults.primaryActionLabel,
+  }
+}
+
+export function resolveResultActionState({
+  isActive = false,
+  isCompactViewport = false,
+  isCollapsed = false,
+  isDownloadDisabled = false,
+  hasShownNudge = false,
+  displayConfig = {},
+  shareConfig = {},
+  actionDefaults = DEFAULT_ACTION_COPY,
+} = {}) {
+  const collapsed = Boolean(isActive && isCompactViewport && isCollapsed && !isDownloadDisabled)
+  const basePrimaryLabel = collapsed
+    ? resolveActionLabel(
+      shareConfig.floatingLabel,
+      resolveActionLabel(
+        shareConfig.primaryActionLabel,
+        resolveActionLabel(displayConfig.downloadButtonLabel, actionDefaults.floatingLabel),
+      ),
+    )
+    : shareConfig.primaryActionLabel != null
+      ? resolveActionLabel(shareConfig.primaryActionLabel, actionDefaults.primaryActionLabel)
+      : !isCompactViewport && displayConfig.downloadButtonLabel != null
+        ? resolveActionLabel(displayConfig.downloadButtonLabel, actionDefaults.primaryActionLabel)
+        : actionDefaults.primaryActionLabel
+  const primaryLabel = collapsed && hasShownNudge
+    ? resolveActionLabel(shareConfig.nudgeLabel, DEFAULT_INLINE_SHARE_COPY.nudgeLabel)
+    : basePrimaryLabel
+  const secondaryLabel = shareConfig.secondaryActionLabel != null
+    ? resolveActionLabel(shareConfig.secondaryActionLabel, actionDefaults.secondaryActionLabel)
+    : isCompactViewport
+      ? actionDefaults.secondaryActionLabel
+      : '分享好友'
+  const restartLabel = resolveActionLabel(displayConfig.restartButtonLabel, '再测一次')
+
+  return {
+    collapsed,
+    primaryIntent: 'download',
+    primaryLabel,
+    primaryAriaLabel: primaryLabel,
+    secondaryLabel,
+    restartLabel,
+    nudgeActive: collapsed && hasShownNudge,
+  }
+}
+
 /* ---- 主结果视图 ---- */
 
 export function createResultView({ onRestart, onDownload }) {
-  const actionDefaults = {
-    promptTitle: '觉得这个结果不错？',
-    promptBody: '先生成海报，发给朋友扫码一起测',
-    primaryActionLabel: '保存海报',
-    secondaryActionLabel: '分享链接',
-    floatingLabel: '保存海报',
-  }
+  const actionDefaults = DEFAULT_ACTION_COPY
   const collapseScrollThreshold = 320
   const collapseCardExitOffset = 88
 
@@ -400,6 +525,8 @@ export function createResultView({ onRestart, onDownload }) {
   let shareConfig = {}
   let isActive = false
   let isCollapsed = false
+  let hasShareInteraction = false
+  let hasShownShareNudge = false
   let scrollListenerAttached = false
 
   const els = {
@@ -412,52 +539,16 @@ export function createResultView({ onRestart, onDownload }) {
     imageWrap: document.getElementById('result-hero-image-wrap'),
     summary: document.getElementById('result-hero-summary'),
     stats: document.getElementById('result-key-stats'),
+    inlineShare: document.getElementById('result-inline-share'),
+    inlineShareTitle: document.getElementById('result-inline-share-title'),
+    inlineShareBody: document.getElementById('result-inline-share-body'),
+    inlineDownload: document.getElementById('btn-inline-download'),
     tags: document.getElementById('result-tags-section'),
     chartSection: document.getElementById('result-chart-section'),
     detailSections: document.getElementById('result-detail-sections'),
     download: document.getElementById('btn-download'),
     share: document.getElementById('btn-share'),
     restart: document.getElementById('btn-restart'),
-  }
-
-  function resolveActionLabel(value, fallback) {
-    const text = String(value ?? '').trim()
-    return text || fallback
-  }
-
-  function resolvePrimaryLabel({ floating = false } = {}) {
-    if (floating) {
-      return resolveActionLabel(
-        shareConfig.floatingLabel,
-        resolveActionLabel(
-          shareConfig.primaryActionLabel,
-          resolveActionLabel(displayConfig.downloadButtonLabel, actionDefaults.floatingLabel),
-        ),
-      )
-    }
-
-    if (shareConfig.primaryActionLabel != null) {
-      return resolveActionLabel(shareConfig.primaryActionLabel, actionDefaults.primaryActionLabel)
-    }
-
-    if (!isCompactViewport() && displayConfig.downloadButtonLabel != null) {
-      return resolveActionLabel(displayConfig.downloadButtonLabel, actionDefaults.primaryActionLabel)
-    }
-
-    return actionDefaults.primaryActionLabel
-  }
-
-  function resolveSecondaryLabel() {
-    if (shareConfig.secondaryActionLabel != null) {
-      return resolveActionLabel(shareConfig.secondaryActionLabel, actionDefaults.secondaryActionLabel)
-    }
-
-    return isCompactViewport() ? actionDefaults.secondaryActionLabel : '分享好友'
-  }
-
-  function resolveRestartLabel() {
-    const fallback = '再测一次'
-    return resolveActionLabel(displayConfig.restartButtonLabel, fallback)
   }
 
   function updateActionCopy() {
@@ -477,37 +568,69 @@ export function createResultView({ onRestart, onDownload }) {
     }
   }
 
+  function updateInlineSharePrompt() {
+    const inlineShareState = resolveInlineShareState({
+      shareConfig,
+      actionDefaults,
+    })
+
+    setOptionalText(els.inlineShareTitle, inlineShareState.title)
+    setOptionalText(els.inlineShareBody, inlineShareState.body)
+
+    if (els.inlineDownload) {
+      const textEl = els.inlineDownload.querySelector('span:last-child')
+      const label = inlineShareState.primaryLabel
+      if (textEl) textEl.textContent = label
+      else els.inlineDownload.textContent = label
+      els.inlineDownload.setAttribute('aria-label', label)
+    }
+
+    if (els.inlineShare) {
+      const titleHidden = !els.inlineShareTitle || els.inlineShareTitle.hidden
+      const bodyHidden = !els.inlineShareBody || els.inlineShareBody.hidden
+      els.inlineShare.hidden = inlineShareState.hidden || (titleHidden && bodyHidden)
+    }
+  }
+
   function applyActionState() {
-    const collapsed = isActive && isCompactViewport() && isCollapsed
+    const actionState = resolveResultActionState({
+      isActive,
+      isCompactViewport: isCompactViewport(),
+      isCollapsed,
+      isDownloadDisabled: Boolean(els.download?.disabled),
+      hasShownNudge: hasShownShareNudge && !hasShareInteraction,
+      displayConfig,
+      shareConfig,
+      actionDefaults,
+    })
+    const { collapsed } = actionState
 
     if (els.actions) {
       els.actions.classList.toggle('is-collapsed', collapsed)
       els.actions.classList.toggle('is-expanded', !collapsed)
+      els.actions.classList.toggle('is-nudged', actionState.nudgeActive)
       els.actions.dataset.state = collapsed ? 'collapsed' : 'expanded'
       els.actions.setAttribute('aria-expanded', collapsed ? 'false' : 'true')
     }
 
     if (els.download) {
       const textEl = els.download.querySelector('span:last-child')
-      const label = collapsed ? resolvePrimaryLabel({ floating: true }) : resolvePrimaryLabel()
+      const label = actionState.primaryLabel
       if (textEl) textEl.textContent = label
       else els.download.textContent = label
-      els.download.setAttribute(
-        'aria-label',
-        collapsed ? `${label}，点击展开分享操作` : label,
-      )
+      els.download.setAttribute('aria-label', actionState.primaryAriaLabel)
     }
 
     if (els.share) {
       const textEl = els.share.querySelector('span:last-child')
-      const label = resolveSecondaryLabel()
+      const label = actionState.secondaryLabel
       if (textEl) textEl.textContent = label
       else els.share.textContent = label
     }
 
     if (els.restart) {
       const textEl = els.restart.querySelector('span:last-child')
-      const label = resolveRestartLabel()
+      const label = actionState.restartLabel
       if (textEl) textEl.textContent = label
       else els.restart.textContent = label
     }
@@ -524,7 +647,50 @@ export function createResultView({ onRestart, onDownload }) {
     applyActionState()
   }
 
+  function markShareInteraction() {
+    if (hasShareInteraction) return
+    hasShareInteraction = true
+    applyActionState()
+  }
+
+  function getReachedPrioritySectionCount() {
+    const sections = els.detailSections
+      ? Array.from(els.detailSections.querySelectorAll('.result-section.is-priority'))
+      : []
+
+    if (sections.length === 0) return 0
+
+    const viewportThreshold = window.innerHeight * 0.72
+    return sections.reduce((count, section) => {
+      const rect = section.getBoundingClientRect()
+      return rect.top <= viewportThreshold ? count + 1 : count
+    }, 0)
+  }
+
+  function maybeActivateShareNudge() {
+    if (
+      hasShareInteraction
+      || hasShownShareNudge
+      || !isActive
+      || !isCompactViewport()
+      || !els.detailSections
+    ) {
+      return
+    }
+
+    const sections = els.detailSections.querySelectorAll('.result-section.is-priority')
+    if (!sections.length) return
+
+    const thresholdCount = Math.min(2, sections.length)
+    if (getReachedPrioritySectionCount() >= thresholdCount) {
+      hasShownShareNudge = true
+      applyActionState()
+    }
+  }
+
   function syncActionState({ force = false } = {}) {
+    maybeActivateShareNudge()
+
     if (!isActive || !isCompactViewport() || els.download?.disabled) {
       if (force || isCollapsed) {
         isCollapsed = false
@@ -565,17 +731,32 @@ export function createResultView({ onRestart, onDownload }) {
 
   function updateActionLabels() {
     updateActionCopy()
+    updateInlineSharePrompt()
     applyActionState()
   }
 
   if (els.download) {
     els.download.addEventListener('click', () => {
       if (!currentResult) return
+      markShareInteraction()
       if (isActive && isCompactViewport() && isCollapsed) {
         setCollapsed(false)
-        return
       }
       onDownload(els.download)
+    })
+  }
+
+  if (els.inlineDownload) {
+    els.inlineDownload.addEventListener('click', () => {
+      if (!currentResult) return
+      markShareInteraction()
+      onDownload(els.inlineDownload)
+    })
+  }
+
+  if (els.share) {
+    els.share.addEventListener('click', () => {
+      markShareInteraction()
     })
   }
 
@@ -595,6 +776,8 @@ export function createResultView({ onRestart, onDownload }) {
 
   function render(result) {
     currentResult = result
+    hasShareInteraction = false
+    hasShownShareNudge = false
 
     renderShareCard(result, els)
 

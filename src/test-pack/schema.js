@@ -313,9 +313,14 @@ export function validatePackManifest(manifest) {
   ;[
     'promptTitle',
     'promptBody',
+    'inlinePromptTitle',
+    'inlinePromptBody',
+    'inlinePrimaryActionLabel',
     'primaryActionLabel',
     'secondaryActionLabel',
     'floatingLabel',
+    'nudgeLabel',
+    'revealToast',
   ].forEach((key) => {
     if (manifest.shareConfig[key] != null) {
       assertOptionalString(manifest.shareConfig[key], `pack.shareConfig.${key} must be a string`)

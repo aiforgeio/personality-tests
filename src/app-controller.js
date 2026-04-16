@@ -513,6 +513,11 @@ function setStartButtonState({ disabled, label }) {
       renderPageQR()
 
       setTimeout(triggerConfetti, 300)
+      setTimeout(() => {
+        const revealToast = pack.shareConfig?.revealToast
+          || '海报已经准备好，点一下就能发给朋友'
+        showToast(revealToast, 2200)
+      }, 700)
 
       // 5. 上报结果（静默失败）
       void resultReporter.reportResult({ pack, result: latestResult }).catch((error) => {

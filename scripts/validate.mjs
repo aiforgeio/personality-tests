@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createFlowController } from '../src/flows/index.js'
+import { resolveInlineShareState, resolveResultActionState, splitDetailSectionsForDisplay } from '../src/result.js'
 import { dimensionPatternMatcherScorer } from '../src/scorers/dimension-pattern-matcher.js'
 import { validateActiveTestConfig, validatePackManifest, validateTestPack } from '../src/test-pack/schema.js'
 
@@ -54,6 +55,9 @@ const FALLBACK_LEVELS = {
     So3: 'M',
   },
 }
+
+const MONTE_CARLO_SAMPLE_COUNT = 2400
+const MONTE_CARLO_SEED = 0x5b1a2026
 
 async function loadJson(relativePath) {
   const fullPath = path.join(projectRoot, relativePath)
@@ -206,6 +210,180 @@ function scoreScenario(pack, scenarioPlan) {
   }
 }
 
+function createSeededRandom(seed) {
+  let state = seed >>> 0
+  return () => {
+    state = (1664525 * state + 1013904223) >>> 0
+    return state / 0x100000000
+  }
+}
+
+function scoreRandomScenario(pack, randomFn) {
+  const flow = createFlowController(pack, { randomFn })
+  let guard = 0
+
+  while (guard < 200) {
+    const snapshot = flow.getSnapshot()
+    const question = snapshot.currentQuestion
+    assert(question, `${pack.id}: expected current question during random flow execution`)
+
+    const optionIndex = Math.floor(randomFn() * question.options.length)
+    flow.selectOption(optionIndex)
+
+    const afterSelect = flow.getSnapshot()
+    if (afterSelect.currentIndex >= afterSelect.totalQuestions - 1) {
+      break
+    }
+
+    const moved = flow.goNext()
+    assert(moved, `${pack.id}: expected to move to next random question`)
+    guard += 1
+  }
+
+  assert(guard < 200, `${pack.id}: random flow execution exceeded the safety limit`)
+
+  const exportResult = flow.exportResult()
+  return dimensionPatternMatcherScorer.score({
+    answers: exportResult.answers,
+    pack,
+    flowState: exportResult.flowState,
+  })
+}
+
+function validateResultActionState() {
+  const compactCollapsed = resolveResultActionState({
+    isActive: true,
+    isCompactViewport: true,
+    isCollapsed: true,
+    isDownloadDisabled: false,
+    hasShownNudge: true,
+    displayConfig: {
+      downloadButtonLabel: '保存分享图片',
+      restartButtonLabel: '重新测试',
+    },
+    shareConfig: {
+      primaryActionLabel: '生成海报',
+      secondaryActionLabel: '分享链接',
+      floatingLabel: '生成海报',
+      nudgeLabel: '生成海报，发给朋友',
+    },
+  })
+
+  assert.equal(compactCollapsed.collapsed, true, 'result: compact collapsed state should remain collapsed')
+  assert.equal(compactCollapsed.primaryIntent, 'download', 'result: compact collapsed primary action should download directly')
+  assert.equal(compactCollapsed.primaryLabel, '生成海报，发给朋友', 'result: compact collapsed primary label should use the nudge label once it is active')
+  assert.equal(compactCollapsed.primaryAriaLabel, '生成海报，发给朋友', 'result: compact collapsed aria label should stay direct even during nudges')
+  assert.equal(compactCollapsed.nudgeActive, true, 'result: compact collapsed action state should flag nudge mode when active')
+
+  const desktopExpanded = resolveResultActionState({
+    isActive: true,
+    isCompactViewport: false,
+    isCollapsed: false,
+    isDownloadDisabled: false,
+    displayConfig: {
+      downloadButtonLabel: '保存分享图片',
+      restartButtonLabel: '重新测试',
+    },
+    shareConfig: {
+      secondaryActionLabel: '分享链接',
+    },
+  })
+
+  assert.equal(desktopExpanded.collapsed, false, 'result: desktop action state should stay expanded')
+  assert.equal(desktopExpanded.primaryIntent, 'download', 'result: desktop primary action should remain download')
+  assert.equal(desktopExpanded.primaryLabel, '保存分享图片', 'result: desktop primary label should prefer displayConfig.downloadButtonLabel')
+}
+
+function validateInlineShareState() {
+  const configured = resolveInlineShareState({
+    shareConfig: {
+      inlinePromptTitle: '把这张结果海报发给朋友对照一下',
+      inlinePromptBody: '一键生成海报，看看你们谁更像股神，谁又是接盘侠',
+      inlinePrimaryActionLabel: '生成结果海报',
+      primaryActionLabel: '生成海报',
+    },
+  })
+
+  assert.equal(configured.title, '把这张结果海报发给朋友对照一下', 'result: inline share title should prefer shareConfig.inlinePromptTitle')
+  assert.equal(configured.body, '一键生成海报，看看你们谁更像股神，谁又是接盘侠', 'result: inline share body should prefer shareConfig.inlinePromptBody')
+  assert.equal(configured.primaryLabel, '生成结果海报', 'result: inline share button should prefer shareConfig.inlinePrimaryActionLabel')
+  assert.equal(configured.hidden, false, 'result: inline share prompt should stay visible with configured copy')
+}
+
+function validateDetailSectionSplitting() {
+  const sections = [
+    { id: 'insight', title: '人格解读' },
+    { id: 'habit', title: '交易习惯与提醒' },
+    { id: 'dimensions', title: '十五维度分布' },
+  ]
+
+  const { prioritySections, overflowSections } = splitDetailSectionsForDisplay(sections)
+  assert.equal(prioritySections.length, 2, 'result: detail display should keep the first two sections in the primary flow')
+  assert.equal(overflowSections.length, 1, 'result: detail display should move overflow sections into the disclosure area')
+  assert.equal(overflowSections[0].id, 'dimensions', 'result: the dimensions section should move into overflow when present after the primary insights')
+}
+
+function validateMonteCarloDistribution(pack) {
+  if (pack.id !== 'gbti') return
+
+  const randomFn = createSeededRandom(MONTE_CARLO_SEED)
+  const heroCounts = new Map()
+  const normalCounts = new Map()
+  let triggeredCount = 0
+  let fallbackCount = 0
+  let preservedSecondaryCount = 0
+
+  for (let index = 0; index < MONTE_CARLO_SAMPLE_COUNT; index += 1) {
+    const result = scoreRandomScenario(pack, randomFn)
+    const heroCode = result.hero.code
+    const normalCode = result.secondaryHero?.code || heroCode
+
+    heroCounts.set(heroCode, (heroCounts.get(heroCode) || 0) + 1)
+    normalCounts.set(normalCode, (normalCounts.get(normalCode) || 0) + 1)
+
+    if (result.specialState?.reason === 'triggered') {
+      triggeredCount += 1
+      assert(result.secondaryHero, 'gbti: triggered hidden results should preserve the best normal type as secondary hero')
+      preservedSecondaryCount += 1
+    }
+
+    if (result.specialState?.reason === 'fallback') {
+      fallbackCount += 1
+    }
+  }
+
+  const tenJqkaRate = (heroCounts.get('TEN_JQKA') || 0) / MONTE_CARLO_SAMPLE_COUNT
+  const triggeredRate = triggeredCount / MONTE_CARLO_SAMPLE_COUNT
+  const uniqueHeroCount = heroCounts.size
+  const uniqueNormalCount = normalCounts.size
+
+  assert(
+    tenJqkaRate > 0.10 && tenJqkaRate < 0.30,
+    `gbti: TEN_JQKA total share should stay within a healthy band (got ${(tenJqkaRate * 100).toFixed(1)}%)`,
+  )
+  assert(
+    triggeredRate > 0.12 && triggeredRate < 0.22,
+    `gbti: hidden trigger rate should stay close to the 1/6 expectation (got ${(triggeredRate * 100).toFixed(1)}%)`,
+  )
+  assert(
+    uniqueHeroCount >= 10,
+    `gbti: Monte Carlo distribution should cover enough final hero types (got ${uniqueHeroCount})`,
+  )
+  assert(
+    uniqueNormalCount >= 10,
+    `gbti: Monte Carlo distribution should cover enough normal hero types (got ${uniqueNormalCount})`,
+  )
+  assert.equal(
+    preservedSecondaryCount,
+    triggeredCount,
+    'gbti: every triggered hidden result should preserve its best normal type as secondary hero',
+  )
+  assert(
+    fallbackCount < MONTE_CARLO_SAMPLE_COUNT * 0.1,
+    `gbti: fallback should remain an edge-case path (got ${(fallbackCount / MONTE_CARLO_SAMPLE_COUNT * 100).toFixed(1)}%)`,
+  )
+}
+
 function validateActiveTest() {
   return loadJson('data/active-test.json').then((config) => {
     const active = validateActiveTestConfig(config)
@@ -300,6 +478,19 @@ async function validatePackScenario(pack) {
     )
   })
 
+  if (pack.id === 'gbti') {
+    assert.equal(
+      normal.dimensions.every((item) => typeof item.summaryLabel === 'string' && item.summaryLabel.length > 0),
+      true,
+      'gbti: dimensions should expose human-readable summary labels',
+    )
+    assert.equal(
+      normal.dimensions.every((item) => ['L', 'M', 'H'].includes(item.levelCode) && ['高', '中', '低'].includes(item.levelLabel) === false),
+      true,
+      'gbti: raw scoring levels should keep stable L/M/H codes for matcher compatibility',
+    )
+  }
+
   assert.equal(hidden.meta.stats[0].value, '100%', `${pack.id}: hidden result should surface 100% match in stats`)
   assert.equal(
     fallback.meta.confidence < pack.specialLogic.similarityFloor,
@@ -310,12 +501,16 @@ async function validatePackScenario(pack) {
 
 async function main() {
   await validateActiveTest()
+  validateResultActionState()
+  validateInlineShareState()
+  validateDetailSectionSplitting()
 
   const packs = await Promise.all(PACK_IDS.map(loadPack))
   assert.equal(packs.length, 2, 'Expected exactly two normalized packs')
 
   for (const pack of packs) {
     await validatePackScenario(pack)
+    validateMonteCarloDistribution(pack)
   }
 
   console.log('Validation passed for gbti and sbti packs.')

@@ -95,6 +95,7 @@ function toDimensionItems(values) {
       id: value.id ?? '',
       label: stripEndingPunctuation(value.label ?? value.id ?? ''),
       shortLabel: stripEndingPunctuation(value.shortLabel ?? value.label ?? value.id ?? ''),
+      summaryLabel: stripEndingPunctuation(value.summaryLabel ?? value.shortLabel ?? value.label ?? value.id ?? ''),
       model: value.model ?? '',
       score: value.score ?? 0,
       percentage: value.percentage ?? 0,

@@ -201,6 +201,7 @@ function buildDimensionResults(pack, answers) {
       id: dimensionId,
       label: meta.label ?? meta.title ?? dimensionId,
       shortLabel: meta.shortLabel ?? meta.label ?? dimensionId,
+      summaryLabel: meta.summaryLabel ?? meta.shortLabel ?? meta.label ?? dimensionId,
       model: meta.model ?? '',
       description: resolveDimensionExplanation(pack, dimensionId, result.levelCode),
       ...result,
@@ -371,9 +372,9 @@ export function scoreDimensionPatternMatcher({ answers, pack, flowState }) {
   const bestNormal = rankedNormalOutcomes[0] ?? {}
   const specialState = createSpecialState(pack, answersByQuestionId, bestNormal)
   const heroOutcome = buildHeroOutcome(pack, bestNormal, specialState, dimensions)
-  const secondaryHeroOutcome = specialState.reason === 'normal' || bestNormal?.code === heroOutcome.code
+  const secondaryHeroOutcome = specialState.reason === 'normal'
     ? null
-    : bestNormal
+    : (bestNormal?.code ? bestNormal : null)
   const rankingOutcomes = specialState.reason === 'normal'
     ? rankedNormalOutcomes
     : [
