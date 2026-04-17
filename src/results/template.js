@@ -1,4 +1,4 @@
-import { getByPath, stripEndingPunctuation } from '../utils.js'
+import { getByPath, resolveCanonicalTestUrl, stripEndingPunctuation } from '../utils.js'
 
 function toTitle(value) {
   const naturalTitle = value.alias ?? value.name ?? value.title
@@ -141,7 +141,7 @@ function resolveSectionPayload(section, context) {
         content: {
           hero: source ?? context.hero,
           secondaryHero: secondarySource ?? context.secondaryHero,
-          shareBadgeText: context.share?.badgeText ?? '',
+          shareBadgeText: context.share?.headerBadgeText ?? '',
           specialState: context.specialState ?? null,
         },
       }
@@ -254,6 +254,14 @@ function resolveDisclaimer(template, context) {
   return ''
 }
 
+function resolveHeaderBadgeText(pack) {
+  return stripEndingPunctuation(
+    pack.shareConfig?.badgeText
+    || pack.display?.shareBadgeText
+    || '你的结果类型是',
+  )
+}
+
 export function buildShareModel({ pack, hero, ranking, meta, secondaryHero }) {
   const rankingLimit = pack.shareConfig?.rankingLimit ?? 3
 
@@ -263,12 +271,12 @@ export function buildShareModel({ pack, hero, ranking, meta, secondaryHero }) {
     rankingTitle: pack.shareConfig?.rankingTitle ?? '人格匹配',
     rankingLimit,
     rankingItems: ranking.slice(0, rankingLimit),
-    badgeText: meta.confidence != null
-      ? `${pack.shareConfig?.badgeLabel ?? '匹配度'} ${meta.confidence}%`
-      : '',
+    headerBadgeText: resolveHeaderBadgeText(pack),
+    url: resolveCanonicalTestUrl(pack),
     heroImage: hero.image ?? '',
     heroArt: hero.art ?? null,
     secondaryTitle: secondaryHero?.title ?? '',
+    qrLabel: pack.shareConfig?.qrLabel ?? '',
     fileName: `${pack.shareConfig?.filenamePrefix ?? pack.id}-${hero.code}.png`,
   }
 }

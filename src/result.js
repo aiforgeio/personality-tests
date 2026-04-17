@@ -8,15 +8,15 @@ import { formatCode, stripEndingPunctuation } from './utils.js'
 
 const DEFAULT_ACTION_COPY = {
   promptTitle: '这个结果很适合发给朋友对照一下',
-  promptBody: '生成海报发给朋友，看看谁更像股神、接盘侠或梭哈King',
-  primaryActionLabel: '保存海报',
+  promptBody: '生成结果海报发给朋友，看看你们分别更像哪一种类型。',
+  primaryActionLabel: '保存结果海报',
   secondaryActionLabel: '分享链接',
-  floatingLabel: '保存海报',
+  floatingLabel: '保存结果海报',
 }
 
 const DEFAULT_INLINE_SHARE_COPY = {
   title: '这个结果很适合发给朋友对照一下',
-  body: '生成海报发给朋友，看看谁更像股神、接盘侠或梭哈King',
+  body: '生成结果海报发给朋友，看看你们分别更像哪一种类型。',
   primaryActionLabel: '生成结果海报',
   nudgeLabel: '生成海报，发给朋友',
 }
@@ -287,7 +287,7 @@ function mergeDetailSections(result) {
   if (result.hero?.description || insightItems.length > 0) {
     sections.push({
       type: 'bullet-list',
-      title: '人格解读',
+      title: '结果解读',
       lead: result.hero?.description || '',
       items: insightItems,
     })
@@ -297,7 +297,7 @@ function mergeDetailSections(result) {
   if (habitItems.length > 0) {
     sections.push({
       type: 'bullet-list',
-      title: '交易习惯与提醒',
+      title: '行为特征与提醒',
       lead: result.hero?.note || '',
       items: habitItems,
     })
@@ -395,9 +395,14 @@ function renderDetailSections(container, result) {
 
 /* ---- 渲染分享卡片 ---- */
 
-function renderShareCard(result, els) {
+function renderShareCard(result, els, { shareConfig = {}, displayConfig = {} } = {}) {
   if (els.badge) {
-    els.badge.textContent = '你的人格类型是'
+    els.badge.textContent = stripEndingPunctuation(
+      result?.share?.headerBadgeText
+      || shareConfig.badgeText
+      || displayConfig.shareBadgeText
+      || '你的结果类型是',
+    )
   }
 
   if (els.imageWrap) {
@@ -500,7 +505,7 @@ export function resolveResultActionState({
     : isCompactViewport
       ? actionDefaults.secondaryActionLabel
       : '分享好友'
-  const restartLabel = resolveActionLabel(displayConfig.restartButtonLabel, '再测一次')
+  const restartLabel = resolveActionLabel(displayConfig.restartButtonLabel, '重新测试')
 
   return {
     collapsed,
@@ -546,6 +551,8 @@ export function createResultView({ onRestart, onDownload }) {
     tags: document.getElementById('result-tags-section'),
     chartSection: document.getElementById('result-chart-section'),
     detailSections: document.getElementById('result-detail-sections'),
+    qrLabel: document.querySelector('.qr-label'),
+    watermark: document.querySelector('.share-card-watermark'),
     download: document.getElementById('btn-download'),
     share: document.getElementById('btn-share'),
     restart: document.getElementById('btn-restart'),
@@ -589,6 +596,14 @@ export function createResultView({ onRestart, onDownload }) {
       const titleHidden = !els.inlineShareTitle || els.inlineShareTitle.hidden
       const bodyHidden = !els.inlineShareBody || els.inlineShareBody.hidden
       els.inlineShare.hidden = inlineShareState.hidden || (titleHidden && bodyHidden)
+    }
+
+    if (els.qrLabel) {
+      els.qrLabel.textContent = stripEndingPunctuation(shareConfig.qrLabel || '扫码测测你是什么型')
+    }
+
+    if (els.watermark) {
+      els.watermark.textContent = stripEndingPunctuation(shareConfig.footer || shareConfig.title || '')
     }
   }
 
@@ -779,7 +794,7 @@ export function createResultView({ onRestart, onDownload }) {
     hasShareInteraction = false
     hasShownShareNudge = false
 
-    renderShareCard(result, els)
+    renderShareCard(result, els, { shareConfig, displayConfig })
 
     if (els.detailSections) {
       renderDetailSections(els.detailSections, result)

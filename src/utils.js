@@ -41,6 +41,18 @@ export function compactCardText(value, maxChars = 26) {
   return stripEndingPunctuation(chars.slice(0, maxChars).join('').trim())
 }
 
+export function truncateWithEllipsis(value, maxChars = 26) {
+  const cleaned = stripEndingPunctuation(value)
+  if (!cleaned) return ''
+  if (maxChars <= 0) return ''
+  if (maxChars === 1) return '…'
+
+  const chars = Array.from(cleaned)
+  if (chars.length <= maxChars) return cleaned
+
+  return `${chars.slice(0, maxChars - 1).join('').trim()}…`
+}
+
 export function toLines(text, limit = 22) {
   if (!text) return []
   const chars = Array.from(text)
@@ -88,4 +100,47 @@ export function groupAdjacentBy(list, getKey) {
   })
 
   return groups
+}
+
+function normalizeBaseUrl(baseUrl = '') {
+  const rawBase = String(
+    baseUrl
+    || (typeof import.meta !== 'undefined' ? import.meta.env?.BASE_URL : '')
+    || '/',
+  ).trim()
+
+  if (!rawBase || rawBase === '/') {
+    return '/'
+  }
+
+  const withLeadingSlash = rawBase.startsWith('/') ? rawBase : `/${rawBase}`
+  return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`
+}
+
+function trimPathSegment(value) {
+  return String(value ?? '').replace(/^\/+|\/+$/g, '')
+}
+
+export function resolveCanonicalTestPath(test, { baseUrl = '' } = {}) {
+  const testId = trimPathSegment(typeof test === 'string' ? test : test?.id)
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
+  const baseSegment = trimPathSegment(normalizedBaseUrl)
+  const joined = [baseSegment, testId].filter(Boolean).join('/')
+
+  return joined ? `/${joined}/` : '/'
+}
+
+export function resolveCanonicalTestUrl(test, { baseUrl = '', origin = '' } = {}) {
+  const path = resolveCanonicalTestPath(test, { baseUrl })
+  const resolvedOrigin = String(
+    origin
+    || (typeof window !== 'undefined' ? window.location?.origin : '')
+    || '',
+  ).trim()
+
+  if (!resolvedOrigin) {
+    return path
+  }
+
+  return new URL(path, `${resolvedOrigin}/`).toString()
 }

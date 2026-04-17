@@ -1,6 +1,6 @@
 /* ============================================================
-   GBTI 股民人格测试 - 移动端优先 UI
-   基准：375px，绿色主色系
+   Personality Tests Host - 移动端优先 UI
+   基准：375px，默认绿色主色系
    ============================================================ */
 
 /* ---- CSS 变量 ---- */
@@ -87,43 +87,48 @@ body {
 
 /* ---- 背景装饰球 ---- */
 .bg-orbs {
-  display: none;
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .bg-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.5;
-  animation: orbFloat 8s ease-in-out infinite;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: orbFloat 12s ease-in-out infinite alternate;
 }
 
 .bg-orb-1 {
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(76, 175, 80, 0.35), transparent 70%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.15), transparent 70%);
   top: -100px;
-  left: -80px;
+  left: -100px;
   animation-delay: 0s;
 }
 
 .bg-orb-2 {
-  width: 250px;
-  height: 250px;
-  background: radial-gradient(circle, rgba(33, 150, 243, 0.25), transparent 70%);
-  bottom: 10%;
-  right: -60px;
-  animation-delay: -3s;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.12), transparent 70%);
+  bottom: -50px;
+  right: -50px;
+  animation-delay: -4s;
 }
 
 .bg-orb-3 {
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(76, 175, 80, 0.2), transparent 70%);
-  top: 40%;
-  left: 50%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 152, 0, 0.1), transparent 70%);
+  top: 30%;
+  left: 60%;
   transform: translateX(-50%);
-  animation-delay: -6s;
+  animation-delay: -8s;
 }
 
 @keyframes orbFloat {
@@ -171,6 +176,293 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
+}
+
+/* ============================================================
+   测试入口首页
+   ============================================================ */
+
+.portal-shell {
+  width: min(1080px, calc(100% - 32px));
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding:
+    calc(var(--safe-top) + 40px)
+    calc(var(--safe-right) + 4px)
+    calc(var(--safe-bottom) + 32px)
+    calc(var(--safe-left) + 4px);
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-hero {
+  margin: 0 auto 24px;
+  text-align: center;
+}
+
+.portal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--tag-bg);
+  border: 1px solid var(--tag-border);
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.portal-title {
+  margin: 14px 0 8px;
+  font-size: clamp(1.7rem, 6vw, 2.4rem);
+  line-height: 1.2;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.portal-subtitle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  max-width: min(88%, 28rem);
+  margin: 0 auto;
+}
+
+.portal-subtitle-line {
+  display: block;
+  text-align: center;
+}
+
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.portal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  /* 顶部彩线：border-top 各卡片单独设置颜色 */
+  border: 1px solid var(--glass-border);
+  border-top-width: 3px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--glass-shadow-sm);
+  color: inherit;
+  overflow: hidden;
+  text-decoration: none;
+  /* 不设 aspect-ratio，高度由内容自然撑开 */
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 右下角装饰光晕（用 ::after，避免与 ::before 冲突） */
+.portal-card::after {
+  content: '';
+  position: absolute;
+  inset: auto -20px -20px auto;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  opacity: 0.45;
+  filter: blur(20px);
+  transition: opacity var(--transition-fast), transform var(--transition-slow);
+  pointer-events: none;
+}
+
+.portal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow);
+}
+
+.portal-card:hover::after {
+  opacity: 0.7;
+  transform: scale(1.15);
+}
+
+.portal-card:active {
+  transform: scale(0.97);
+}
+
+.portal-card:focus-visible {
+  outline: 3px solid var(--primary-glow);
+  outline-offset: 2px;
+}
+
+.portal-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.portal-card-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.portal-card-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.portal-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--glass-border);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.portal-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.portal-name {
+  margin: 0;
+  font-size: clamp(0.95rem, 3.6vw, 1.15rem);
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.portal-copy {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.portal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.portal-meta-item {
+  font-size: 0.67rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.portal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.portal-tag {
+  font-size: 0.62rem;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* SBTI — 绿色 */
+.portal-card-sbti {
+  border-top-color: #66BB6A;
+}
+.portal-card-sbti::after {
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.5), transparent 70%);
+}
+.portal-card-sbti .portal-card-icon-wrap {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+}
+
+/* GBTI — 蓝色 */
+.portal-card-gbti {
+  border-top-color: #42A5F5;
+}
+.portal-card-gbti::after {
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.5), transparent 70%);
+}
+.portal-card-gbti .portal-card-icon-wrap {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+}
+
+/* ABTI — 橙色 */
+.portal-card-abti {
+  border-top-color: #FFA726;
+}
+.portal-card-abti::after {
+  background: radial-gradient(circle, rgba(255, 152, 0, 0.5), transparent 70%);
+}
+.portal-card-abti .portal-card-icon-wrap {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+}
+
+/* MPTI — 紫色 */
+.portal-card-mpti {
+  border-top-color: #AB47BC;
+}
+.portal-card-mpti::after {
+  background: radial-gradient(circle, rgba(156, 39, 176, 0.4), transparent 70%);
+}
+.portal-card-mpti .portal-card-icon-wrap {
+  background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+}
+
+/* 页脚 */
+.portal-footer {
+  margin-top: 24px;
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.portal-disclaimer {
+  margin: 0 0 6px;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.portal-footer-note {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
+.portal-copyright {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.68rem;
 }
 
 /* ============================================================
