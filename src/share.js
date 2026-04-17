@@ -117,8 +117,8 @@ const DEFAULT_POSTER_SPACING = {
   afterTitle: 16,
   afterCode: 32,
   afterComparison: 24,
-  afterQuote: 24,
-  afterTags: 50,
+  afterQuote: 2,
+  afterTags: 28,
 }
 
 const TIGHT_POSTER_SPACING = {
@@ -127,8 +127,8 @@ const TIGHT_POSTER_SPACING = {
   afterTitle: 12,
   afterCode: 24,
   afterComparison: 18,
-  afterQuote: 18,
-  afterTags: 32,
+  afterQuote: 2,
+  afterTags: 20,
 }
 
 /* ---- 绘制背景 ---- */
@@ -285,25 +285,19 @@ async function drawHeroPanel(ctx, hero, x, y, width, height) {
 function drawQuoteCard(ctx, lines, centerX, y) {
   if (!lines.length) return y
 
-  // 始终占用两行的高度空间
-  const fixedHeight = 2 * QUOTE_LINE_HEIGHT
+  const height = lines.length * QUOTE_LINE_HEIGHT
+  const quoteBottomPadding = 10
 
   /* 引用文字 - 居中、无边框、斜体 */
   ctx.fillStyle = PALETTE.textSecondary
   ctx.font = `italic 500 24px ${FONT}` // 放大字体
   ctx.textAlign = 'center'
 
-  if (lines.length === 1) {
-    // 只有一行时，垂直居中在两行空间内
-    ctx.fillText(lines[0], centerX, y + 24 + QUOTE_LINE_HEIGHT / 2)
-  } else {
-    // 两行时正常排列
-    lines.forEach((line, index) => {
-      ctx.fillText(line, centerX, y + 24 + index * QUOTE_LINE_HEIGHT)
-    })
-  }
+  lines.forEach((line, index) => {
+    ctx.fillText(line, centerX, y + 24 + index * QUOTE_LINE_HEIGHT)
+  })
 
-  return y + fixedHeight + 24
+  return y + height + quoteBottomPadding
 }
 
 function buildTagRows(ctx, tags, maxWidth, { limit = 4 } = {}) {
@@ -508,8 +502,7 @@ function measurePosterContent(ctx, {
   }
 
   if (quoteLines.length) {
-    // 始终按两行高度计算，保证布局一致性
-    contentBottom += 2 * QUOTE_LINE_HEIGHT + 24 + spacing.afterQuote
+    contentBottom += quoteLines.length * QUOTE_LINE_HEIGHT + 24 + spacing.afterQuote
   }
 
   if (tagRows.length) {
@@ -542,7 +535,7 @@ function resolvePosterLayout(ctx, {
   footerY,
 }) {
   const layout = {
-    quoteMaxLines: quote ? 2 : 0, // 强制最多2行
+    quoteMaxLines: quote ? 3 : 0,
     tagLimit: Math.min(tags.length, 4),
     dimensionLimit: Math.min(dimensions.length, 6),
     spacing: DEFAULT_POSTER_SPACING,
@@ -567,6 +560,11 @@ function resolvePosterLayout(ctx, {
 
   let measured = measure()
 
+
+  if (measured.contentBottom > maxContentBottom && layout.quoteMaxLines > 2) {
+    layout.quoteMaxLines = 2
+    measured = measure()
+  }
 
   if (measured.contentBottom > maxContentBottom && layout.tagLimit > 3) {
     layout.tagLimit = 3
@@ -598,6 +596,7 @@ function resolvePosterLayout(ctx, {
 
 export async function generateShareImage(result, { forceDataUrl = false } = {}) {
   const { hero, share } = result
+
   const tags = getHighlightTags(result, 4)
   const dimensions = getHighlightDimensions(result, 6)
   const comparison = getPosterComparison(result)
