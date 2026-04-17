@@ -311,6 +311,7 @@ export function createStandardResultViewModel({
   }
 
   return {
+    packId: pack.id,
     hero,
     secondaryHero,
     dimensions,
