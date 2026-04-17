@@ -1,0 +1,48 @@
+[
+  {
+    "id": "quit_gate_q1",
+    "prompt": "你周末最可能在做什么？",
+    "kind": "quit_gate",
+    "special": true,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "补觉/追剧/打游戏——周末当然是用来恢复HP的。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "去实验室继续干活，DDL不等人。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "刷招聘网站/考公信息/看看外面的世界。",
+        "value": 3
+      },
+      {
+        "id": "option-4",
+        "label": "运动/社交/出去玩——生活不只有科研。",
+        "value": 4
+      }
+    ]
+  },
+  {
+    "id": "quit_gate_q2",
+    "prompt": "你对离开学术圈的态度是？",
+    "kind": "quit_trigger",
+    "special": true,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "偶尔想想，但觉得还是先把学位拿了再说。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "已经在认真准备了。科研，对不起，是我配不上你。",
+        "value": 2
+      }
+    ]
+  }
+]

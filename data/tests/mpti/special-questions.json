@@ -1,0 +1,48 @@
+[
+  {
+    "id": "ghost_gate_q1",
+    "prompt": "如果让你形容导师的存在感，最贴切的比喻是：",
+    "kind": "ghost_gate",
+    "special": true,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "实体 NPC，在办公室经常能刷到真人。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "半隐身状态，在线但总是抓不到实体。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "快递柜里的包裹——你知道 TA 在，但就是取不到。",
+        "value": 3
+      },
+      {
+        "id": "option-4",
+        "label": "薛定谔的导师——不打开办公室的门，你永远不知道里面有没有人。甚至打开了也不一定有。",
+        "value": 4
+      }
+    ]
+  },
+  {
+    "id": "ghost_gate_q2",
+    "prompt": "回忆一下，你上一次跟导师面对面聊超过 10 分钟是什么时候？",
+    "kind": "ghost_trigger",
+    "special": true,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "就最近，TA 虽然忙但还算是个能捕捉到的实体人类。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "真想不起来了……我开始怀疑我导师是不是 AI 生成的虚拟人物。",
+        "value": 2
+      }
+    ]
+  }
+]

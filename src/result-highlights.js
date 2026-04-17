@@ -12,6 +12,7 @@ function toTextValue(value) {
 
 function buildDimensionSalience(item) {
   const percentage = Number(item?.percentage ?? 0)
+  // 距离中点越远（越极端）越突出；同等距离时 score 更高的优先
   const distance = Math.abs(percentage - 50)
   const weight = Number(item?.score ?? 0) * 0.1
   return distance + weight
@@ -25,16 +26,38 @@ export function getHighlightTags(result, limit = 3) {
 }
 
 export function getHighlightDimensions(result, limit = 4) {
-  return (Array.isArray(result?.dimensions) ? result.dimensions : [])
+  const items = (Array.isArray(result?.dimensions) ? result.dimensions : [])
     .filter(Boolean)
     .map((item) => ({
       ...item,
       salience: buildDimensionSalience(item),
-      label: stripEndingPunctuation(item.shortLabel ?? item.label ?? item.id ?? ''),
+      label: stripEndingPunctuation(item.summaryLabel ?? item.shortLabel ?? item.label ?? item.id ?? ''),
     }))
-    .sort((left, right) => right.salience - left.salience || right.percentage - left.percentage)
-    .slice(0, limit)
-    .map(({ salience, ...item }) => item)
+    // 主排序：salience 降序（极端维度优先）；次排序：percentage 降序（H > L 同等 salience 时）；三排序：score 降序
+    .sort(
+      (left, right) =>
+        right.salience - left.salience ||
+        right.percentage - left.percentage ||
+        right.score - left.score,
+    )
+
+  // 尽量保证结果中同时包含高分（H）和低分（L）维度，避免全部是同一 level
+  // 策略：先取 salience 最高的 limit 个，但如果全部是同一 levelCode，
+  // 则尝试用不同 levelCode 的最高 salience 项替换最后一个
+  const selected = items.slice(0, limit)
+
+  if (selected.length >= 2) {
+    const levelCodes = new Set(selected.map((d) => d.levelCode))
+    if (levelCodes.size === 1) {
+      // 所有选中项都是同一 level，尝试找一个不同 level 的项替换最后一个
+      const differentLevel = items.find((d) => d.levelCode !== selected[0].levelCode)
+      if (differentLevel) {
+        selected[selected.length - 1] = differentLevel
+      }
+    }
+  }
+
+  return selected.map(({ salience, ...item }) => item)
 }
 
 export function getComparisonHero(result) {

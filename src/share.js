@@ -7,7 +7,7 @@ import {
   getPosterComparison,
   getPosterQuote,
 } from './result-highlights.js'
-import { formatCode, stripEndingPunctuation, toLines } from './utils.js'
+import { formatCode, stripEndingPunctuation, toLines, toSmartLines, truncateWithEllipsis } from './utils.js'
 
 /* ---- Canvas 工具函数 ---- */
 
@@ -50,8 +50,11 @@ function clampLines(text, limit, maxLines) {
   if (lines.length <= maxLines) return lines
 
   const visible = lines.slice(0, maxLines)
-  const last = visible[maxLines - 1] || ''
-  visible[maxLines - 1] = last.slice(0, Math.max(0, limit))
+  const lastVisible = visible[maxLines - 1] || ''
+  const lastVisibleChars = Array.from(lastVisible)
+  visible[maxLines - 1] = lastVisibleChars.length >= limit
+    ? truncateWithEllipsis(lastVisible, limit)
+    : `${lastVisible}…`
   return visible
 }
 
@@ -91,6 +94,41 @@ const PALETTE = {
   barBg: 'rgba(0, 0, 0, 0.06)',
   tagBg: 'rgba(46, 125, 50, 0.07)',
   tagBorder: 'rgba(46, 125, 50, 0.16)',
+}
+
+const HERO_SIZE = 260
+const FOOTER_HEIGHT = 120
+const FOOTER_BOTTOM_MARGIN = 16
+const CONTENT_BOTTOM_GAP = 36
+const QUOTE_LINE_LIMIT = 22
+const QUOTE_LINE_HEIGHT = 36
+const TAG_CHAR_LIMIT = 8
+const TAG_HEIGHT = 38
+const TAG_GAP = 12
+const TAG_ROW_GAP = 12
+const TAG_PADDING_X = 20
+const DIMENSION_TITLE_GAP = 48
+const DIMENSION_ROW_HEIGHT = 64
+const DIMENSION_BOTTOM_PADDING = 32
+
+const DEFAULT_POSTER_SPACING = {
+  afterBadge: 32,
+  afterHero: 32,
+  afterTitle: 16,
+  afterCode: 32,
+  afterComparison: 24,
+  afterQuote: 24,
+  afterTags: 50,
+}
+
+const TIGHT_POSTER_SPACING = {
+  afterBadge: 24,
+  afterHero: 24,
+  afterTitle: 12,
+  afterCode: 24,
+  afterComparison: 18,
+  afterQuote: 18,
+  afterTags: 32,
 }
 
 /* ---- 绘制背景 ---- */
@@ -140,13 +178,29 @@ function drawCardBackground(ctx, x, y, w, h, r = 30) {
 
 /* ---- 顶部 badge 标签 ---- */
 
-function drawTopBadge(ctx, text, centerX, y) {
-  ctx.font = `600 18px ${FONT}` // 放大字体
-  const textWidth = ctx.measureText(text).width
-  const paddingX = 24 // 增加内边距
+function drawTopBadge(ctx, text, centerX, y, maxWidth = 480) {
+  const paddingX = 24
   const paddingY = 12
-  const badgeW = textWidth + paddingX * 2 // 移除绿点占用的宽度
-  const badgeH = 40 // 增加高度
+  const badgeH = 40
+  let fontSize = 18
+  let displayText = stripEndingPunctuation(text || '你的结果类型是')
+
+  while (fontSize > 14) {
+    ctx.font = `600 ${fontSize}px ${FONT}`
+    if (ctx.measureText(displayText).width + paddingX * 2 <= maxWidth) {
+      break
+    }
+    fontSize -= 1
+  }
+
+  if (ctx.measureText(displayText).width + paddingX * 2 > maxWidth) {
+    const approxMaxChars = Math.max(8, Math.floor((maxWidth - paddingX * 2) / Math.max(fontSize, 1)))
+    displayText = truncateWithEllipsis(displayText, approxMaxChars)
+    ctx.font = `600 ${fontSize}px ${FONT}`
+  }
+
+  const textWidth = ctx.measureText(displayText).width
+  const badgeW = Math.min(textWidth + paddingX * 2, maxWidth)
 
   const badgeX = centerX - badgeW / 2
 
@@ -163,10 +217,10 @@ function drawTopBadge(ctx, text, centerX, y) {
 
   /* 文字 (居中，无绿点) */
   ctx.fillStyle = PALETTE.primary
-  ctx.font = `600 18px ${FONT}` // 放大字体
+  ctx.font = `600 ${fontSize}px ${FONT}`
   ctx.textAlign = 'center'
   ctx.letterSpacing = '0.12em'
-  ctx.fillText(text, centerX + 1, y + paddingY + 15) // 居中对齐
+  ctx.fillText(displayText, centerX + 1, y + paddingY + 15)
   ctx.letterSpacing = '0px'
 
   return y + badgeH
@@ -228,42 +282,49 @@ async function drawHeroPanel(ctx, hero, x, y, width, height) {
 
 /* ---- 文本区块 ---- */
 
-function drawQuoteCard(ctx, text, centerX, y, maxWidth) {
-  const lines = clampLines(stripEndingPunctuation(text), 22, 3)
-  const lineHeight = 36 // 增加行高
-  const height = lines.length * lineHeight
+function drawQuoteCard(ctx, lines, centerX, y) {
+  if (!lines.length) return y
+
+  // 始终占用两行的高度空间
+  const fixedHeight = 2 * QUOTE_LINE_HEIGHT
 
   /* 引用文字 - 居中、无边框、斜体 */
   ctx.fillStyle = PALETTE.textSecondary
   ctx.font = `italic 500 24px ${FONT}` // 放大字体
   ctx.textAlign = 'center'
 
-  lines.forEach((line, index) => {
-    ctx.fillText(line, centerX, y + 24 + index * lineHeight)
-  })
+  if (lines.length === 1) {
+    // 只有一行时，垂直居中在两行空间内
+    ctx.fillText(lines[0], centerX, y + 24 + QUOTE_LINE_HEIGHT / 2)
+  } else {
+    // 两行时正常排列
+    lines.forEach((line, index) => {
+      ctx.fillText(line, centerX, y + 24 + index * QUOTE_LINE_HEIGHT)
+    })
+  }
 
-  return y + height + 24
+  return y + fixedHeight + 24
 }
 
-function drawTags(ctx, tags, centerX, y, maxWidth) {
-  const visibleTags = tags.map((tag) => stripEndingPunctuation(tag)).filter(Boolean).slice(0, 4)
-  if (!visibleTags.length) return y
+function buildTagRows(ctx, tags, maxWidth, { limit = 4 } = {}) {
+  const visibleTags = tags
+    .map((tag) => stripEndingPunctuation(tag))
+    .filter(Boolean)
+    .slice(0, limit)
 
-  ctx.font = `600 18px ${FONT}` // 放大字体
-  const tagHeight = 38 // 增加高度
-  const gap = 12 // 增加间距
-  const paddingX = 20 // 增加内边距
+  if (!visibleTags.length) return []
+
+  ctx.font = `600 18px ${FONT}`
 
   const rows = []
   let row = []
   let rowWidth = 0
 
-  // 强制两排显示：如果超过2个标签，就在第2个之后换行
   visibleTags.forEach((text, index) => {
-    const safeText = text.length > 8 ? text.slice(0, 8) : text
-    const width = ctx.measureText(safeText).width + paddingX * 2
+    const safeText = truncateWithEllipsis(text, TAG_CHAR_LIMIT)
+    const width = ctx.measureText(safeText).width + TAG_PADDING_X * 2
 
-    if (index === 2 || (row.length > 0 && rowWidth + width + gap > maxWidth)) {
+    if (index === 2 || (row.length > 0 && rowWidth + width + TAG_GAP > maxWidth)) {
       rows.push(row)
       row = [{ text: safeText, width }]
       rowWidth = width
@@ -271,22 +332,32 @@ function drawTags(ctx, tags, centerX, y, maxWidth) {
     }
 
     row.push({ text: safeText, width })
-    rowWidth += (row.length > 1 ? gap : 0) + width
+    rowWidth += (row.length > 1 ? TAG_GAP : 0) + width
   })
 
   if (row.length > 0) rows.push(row)
+  return rows.slice(0, 2)
+}
+
+function getTagRowsHeight(rows) {
+  if (!rows.length) return 0
+  return rows.length * TAG_HEIGHT + Math.max(rows.length - 1, 0) * TAG_ROW_GAP
+}
+
+function drawTags(ctx, rows, centerX, y) {
+  if (!rows.length) return y
 
   let currentY = y
-  rows.slice(0, 2).forEach((items) => {
-    const totalWidth = items.reduce((sum, item, index) => sum + item.width + (index > 0 ? gap : 0), 0)
+  rows.forEach((items) => {
+    const totalWidth = items.reduce((sum, item, index) => sum + item.width + (index > 0 ? TAG_GAP : 0), 0)
     let currentX = centerX - totalWidth / 2
 
     items.forEach((item) => {
-      roundRect(ctx, currentX, currentY, item.width, tagHeight, tagHeight / 2)
+      roundRect(ctx, currentX, currentY, item.width, TAG_HEIGHT, TAG_HEIGHT / 2)
       ctx.fillStyle = PALETTE.tagBg
       ctx.fill()
 
-      roundRect(ctx, currentX, currentY, item.width, tagHeight, tagHeight / 2)
+      roundRect(ctx, currentX, currentY, item.width, TAG_HEIGHT, TAG_HEIGHT / 2)
       ctx.strokeStyle = PALETTE.tagBorder
       ctx.lineWidth = 0.8
       ctx.stroke()
@@ -294,13 +365,13 @@ function drawTags(ctx, tags, centerX, y, maxWidth) {
       ctx.fillStyle = PALETTE.primary
       ctx.textAlign = 'center'
       ctx.fillText(item.text, currentX + item.width / 2, currentY + 25) // 调整文字垂直位置
-      currentX += item.width + gap
+      currentX += item.width + TAG_GAP
     })
 
-    currentY += tagHeight + 12 // 增加行间距
+    currentY += TAG_HEIGHT + TAG_ROW_GAP
   })
 
-  return currentY
+  return currentY - TAG_ROW_GAP
 }
 
 function drawComparisonPill(ctx, comparison, centerX, y, maxWidth) {
@@ -309,7 +380,7 @@ function drawComparisonPill(ctx, comparison, centerX, y, maxWidth) {
   const rawTitle = comparison.title || comparison.code || ''
   if (!rawTitle) return y
 
-  const title = rawTitle.length > 10 ? rawTitle.slice(0, 10) : rawTitle
+  const title = truncateWithEllipsis(rawTitle, 10)
   const text = `常规命中 ${title}`
 
   ctx.font = `600 15px ${FONT}`
@@ -334,31 +405,37 @@ function drawComparisonPill(ctx, comparison, centerX, y, maxWidth) {
 /* ---- 维度图表（极简列表风，保留绿色系） ---- */
 
 function drawDimensionList(ctx, dimensions, x, y, width) {
-  const visibleItems = dimensions.slice(0, 4)
-  if (!visibleItems.length) return y
+  if (!dimensions.length) return y
 
   // 标题
   ctx.textAlign = 'left'
   ctx.fillStyle = PALETTE.textMuted
-  ctx.font = `600 14px ${FONT}`
+  ctx.font = `600 18px ${FONT}`
   ctx.letterSpacing = '0.1em'
   ctx.fillText('核心维度分析', x, y)
   ctx.letterSpacing = '0px'
-  y += 48 // 增加标题与列表的间距
+  y += DIMENSION_TITLE_GAP
 
-  const rowHeight = 64 // 增加行高，拉大间距
-  const labelWidth = 140
+  // 根据标签实际宽度动态计算 labelWidth，避免截断
+  ctx.font = `500 20px ${FONT}`
+  const labelGap = 16
+  const measuredLabelWidth = dimensions.reduce((max, item) => {
+    const w = ctx.measureText(item.label).width
+    return w > max ? w : max
+  }, 0)
+  const labelWidth = Math.max(Math.ceil(measuredLabelWidth) + labelGap, 80)
   const valueWidth = 60
   const barX = x + labelWidth
-  const barWidth = width - labelWidth - valueWidth - 20 // 20px padding
+  const barWidth = Math.max(width - labelWidth - valueWidth - 20, 40) // 20px padding, 最小40px
 
-  visibleItems.forEach((item) => {
+  dimensions.forEach((item) => {
     // Label
     ctx.textAlign = 'left'
     ctx.fillStyle = PALETTE.text
     ctx.font = `500 20px ${FONT}`
-    const label = item.label.length > 7 ? item.label.slice(0, 7) : item.label
-    ctx.fillText(label, x, y + 6)
+    // Remove letters and numbers from the label
+    const cleanLabel = item.label.replace(/[a-zA-Z0-9]/g, '').trim()
+    ctx.fillText(cleanLabel, x, y + 6)
 
     // Bar Background
     const barY = y - 3
@@ -367,47 +444,162 @@ function drawDimensionList(ctx, dimensions, x, y, width) {
     ctx.fillStyle = PALETTE.barBg
     ctx.fill()
 
-    // Bar Fill
+    // Bar Fill — 始终显示进度条，最小宽度为 barH（圆角直径）
     const pct = Number(item.percentage ?? 0)
-    if (pct > 0) {
-      const fillWidth = Math.max(barH, (pct / 100) * barWidth)
-      const fillGradient = ctx.createLinearGradient(barX, barY, barX + fillWidth, barY)
-      fillGradient.addColorStop(0, PALETTE.primaryLight)
-      fillGradient.addColorStop(1, PALETTE.primary)
-      roundRect(ctx, barX, barY, fillWidth, barH, barH / 2)
-      ctx.fillStyle = fillGradient
-      ctx.fill()
-    } else {
-      // 0% 状态：极简虚线
-      ctx.save()
-      ctx.setLineDash([4, 4])
-      ctx.strokeStyle = 'rgba(46, 125, 50, 0.25)' // 恢复绿色虚线
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(barX + 2, barY + barH / 2)
-      ctx.lineTo(barX + barWidth - 2, barY + barH / 2)
-      ctx.stroke()
-      ctx.restore()
-    }
+    const fillWidth = Math.max(barH, (pct / 100) * barWidth)
+    const fillGradient = ctx.createLinearGradient(barX, barY, barX + fillWidth, barY)
+    fillGradient.addColorStop(0, PALETTE.primaryLight)
+    fillGradient.addColorStop(1, PALETTE.primary)
+    roundRect(ctx, barX, barY, fillWidth, barH, barH / 2)
+    ctx.fillStyle = fillGradient
+    ctx.fill()
 
-    // Value
+    // Value — 始终显示百分比，不再用"—"代替
     ctx.textAlign = 'right'
-    ctx.fillStyle = pct > 0 ? PALETTE.primary : PALETTE.textMuted // 恢复绿色数值
+    ctx.fillStyle = PALETTE.primary
     ctx.font = `600 20px ${FONT}`
-    ctx.fillText(pct > 0 ? `${Math.round(pct)}%` : '—', x + width, y + 6)
+    ctx.fillText(`${Math.round(pct)}%`, x + width, y + 6)
 
-    y += rowHeight
+    y += DIMENSION_ROW_HEIGHT
   })
 
-  return y - rowHeight + 32 // Adjust bottom margin
+  return y - DIMENSION_ROW_HEIGHT + DIMENSION_BOTTOM_PADDING
+}
+
+function prepareDimensionItems(dimensions, { limit = 4 } = {}) {
+  return dimensions.slice(0, limit).map((item) => ({
+    ...item,
+  }))
+}
+
+function getDimensionSectionHeight(items) {
+  if (!items.length) return 0
+  return DIMENSION_TITLE_GAP + DIMENSION_BOTTOM_PADDING + Math.max(items.length - 1, 0) * DIMENSION_ROW_HEIGHT
+}
+
+function measurePosterContent(ctx, {
+  quote,
+  tags,
+  dimensions,
+  comparison,
+  title,
+  code,
+  cardY,
+  cardW,
+  spacing,
+  quoteMaxLines,
+  tagLimit,
+  dimensionLimit,
+}) {
+  const quoteLines = quote ? toSmartLines(quote, QUOTE_LINE_LIMIT) : []
+  const tagRows = buildTagRows(ctx, tags, cardW - 80, { limit: tagLimit })
+  const dimensionItems = prepareDimensionItems(dimensions, { limit: dimensionLimit })
+  const titleSize = fitTextSize(ctx, title, cardW - 80, 68, 42, 900)
+  const codeSize = fitTextSize(ctx, code, cardW - 140, 22, 16, 700)
+
+  let contentBottom = cardY + 48
+  contentBottom += 40 + spacing.afterBadge
+  contentBottom += HERO_SIZE + spacing.afterHero
+  contentBottom += titleSize + spacing.afterTitle
+  contentBottom += codeSize + spacing.afterCode
+
+  if (comparison) {
+    contentBottom += 30 + spacing.afterComparison
+  }
+
+  if (quoteLines.length) {
+    // 始终按两行高度计算，保证布局一致性
+    contentBottom += 2 * QUOTE_LINE_HEIGHT + 24 + spacing.afterQuote
+  }
+
+  if (tagRows.length) {
+    contentBottom += getTagRowsHeight(tagRows) + spacing.afterTags
+  }
+
+  if (dimensionItems.length) {
+    contentBottom += getDimensionSectionHeight(dimensionItems)
+  }
+
+  return {
+    quoteLines,
+    tagRows,
+    dimensionItems,
+    titleSize,
+    codeSize,
+    contentBottom,
+  }
+}
+
+function resolvePosterLayout(ctx, {
+  quote,
+  tags,
+  dimensions,
+  comparison,
+  title,
+  code,
+  cardY,
+  cardW,
+  footerY,
+}) {
+  const layout = {
+    quoteMaxLines: quote ? 2 : 0, // 强制最多2行
+    tagLimit: Math.min(tags.length, 4),
+    dimensionLimit: Math.min(dimensions.length, 6),
+    spacing: DEFAULT_POSTER_SPACING,
+  }
+
+  const maxContentBottom = footerY - CONTENT_BOTTOM_GAP
+
+  const measure = () => measurePosterContent(ctx, {
+    quote,
+    tags,
+    dimensions,
+    comparison,
+    title,
+    code,
+    cardY,
+    cardW,
+    spacing: layout.spacing,
+    quoteMaxLines: layout.quoteMaxLines,
+    tagLimit: layout.tagLimit,
+    dimensionLimit: layout.dimensionLimit,
+  })
+
+  let measured = measure()
+
+
+  if (measured.contentBottom > maxContentBottom && layout.tagLimit > 3) {
+    layout.tagLimit = 3
+    measured = measure()
+  }
+
+  if (measured.contentBottom > maxContentBottom && layout.tagLimit > 2) {
+    layout.tagLimit = 2
+    measured = measure()
+  }
+
+  if (measured.contentBottom > maxContentBottom && layout.dimensionLimit > 6) {
+    layout.dimensionLimit = 6
+    measured = measure()
+  }
+
+  if (measured.contentBottom > maxContentBottom) {
+    layout.spacing = TIGHT_POSTER_SPACING
+    measured = measure()
+  }
+
+  return {
+    ...layout,
+    ...measured,
+  }
 }
 
 /* ---- 主生成函数 ---- */
 
-export async function generateShareImage(result) {
+export async function generateShareImage(result, { forceDataUrl = false } = {}) {
   const { hero, share } = result
   const tags = getHighlightTags(result, 4)
-  const dimensions = getHighlightDimensions(result, 4)
+  const dimensions = getHighlightDimensions(result, 6)
   const comparison = getPosterComparison(result)
   const quote = stripEndingPunctuation(getPosterQuote(result))
 
@@ -429,69 +621,80 @@ export async function generateShareImage(result) {
   const cardW = width - 56
   const cardH = height - 56
   const centerX = width / 2
+  const footerY = cardY + cardH - FOOTER_HEIGHT - FOOTER_BOTTOM_MARGIN
   drawCardBackground(ctx, cardX, cardY, cardW, cardH, 32)
 
-  let y = cardY + 48 // 恢复顶部留白
+  const headerBadgeText = stripEndingPunctuation(share?.headerBadgeText || '你的结果类型是')
+  const canonicalUrl = share?.url || (typeof window !== 'undefined' ? window.location.href.split('?')[0] : '')
+  const footerQrLabel = truncateWithEllipsis(share?.qrLabel || '扫码测测你是什么型', 16)
+  const footerTitle = truncateWithEllipsis(share?.title || '人格测试', 22)
 
-  /* 顶部 badge 标签 */
-  y = drawTopBadge(ctx, '你的人格类型是', centerX, y)
-  y += 32 // 压缩间距
-
-  /* 英雄图片 */
-  const heroSize = 260 // 稍微缩小图片以适应 1280 高度
-  await drawHeroPanel(ctx, hero, centerX - heroSize / 2, y, heroSize, heroSize)
-  y += heroSize + 32 // 压缩间距
-
-  /* 中文主标题 */
   const hasNaturalHeroTitle = Boolean(hero?.data?.alias || hero?.data?.name || hero?.data?.title)
   const title = hasNaturalHeroTitle
     ? (stripEndingPunctuation(hero.title || '') || formatCode(hero.code))
     : (hero.title || formatCode(hero.code))
-  const titleSize = fitTextSize(ctx, title, cardW - 80, 68, 42, 900)
-  y += titleSize
+  const code = formatCode(hero.code)
+  const posterLayout = resolvePosterLayout(ctx, {
+    quote,
+    tags,
+    dimensions,
+    comparison,
+    title,
+    code,
+    cardY,
+    cardW,
+    footerY,
+  })
+
+  let y = cardY + 48 // 恢复顶部留白
+
+  /* 顶部 badge 标签 */
+  y = drawTopBadge(ctx, headerBadgeText, centerX, y, cardW - 80)
+  y += posterLayout.spacing.afterBadge
+
+  /* 英雄图片 */
+  await drawHeroPanel(ctx, hero, centerX - HERO_SIZE / 2, y, HERO_SIZE, HERO_SIZE)
+  y += HERO_SIZE + posterLayout.spacing.afterHero
+
+  /* 中文主标题 */
+  y += posterLayout.titleSize
   ctx.fillStyle = '#1a4d1e'  // 深绿色
-  ctx.font = `900 ${titleSize}px ${FONT}`
+  ctx.font = `900 ${posterLayout.titleSize}px ${FONT}`
   ctx.textAlign = 'center'
   ctx.fillText(title, centerX, y)
-  y += 16 // 压缩间距
+  y += posterLayout.spacing.afterTitle
 
   /* 英文代号 */
-  const code = formatCode(hero.code)
-  const codeSize = fitTextSize(ctx, code, cardW - 140, 22, 16, 700)
-  y += codeSize
+  y += posterLayout.codeSize
   ctx.fillStyle = '#5a8a5e'  // 带绿调的中灰
-  ctx.font = `700 ${codeSize}px ${FONT}`
+  ctx.font = `700 ${posterLayout.codeSize}px ${FONT}`
   ctx.letterSpacing = '0.22em'
   ctx.fillText(code, centerX, y)
   ctx.letterSpacing = '0px'
-  y += 32 // 压缩间距
+  y += posterLayout.spacing.afterCode
 
   /* 常规命中对比 */
   if (comparison) {
     y = drawComparisonPill(ctx, comparison, centerX, y, cardW - 120)
-    y += 24 // 压缩间距
+    y += posterLayout.spacing.afterComparison
   }
 
   /* 引用语 */
-  if (quote) {
-    y = drawQuoteCard(ctx, quote, centerX, y, cardW - 80)
-    y += 24 // 压缩间距
+  if (posterLayout.quoteLines.length) {
+    y = drawQuoteCard(ctx, posterLayout.quoteLines, centerX, y)
+    y += posterLayout.spacing.afterQuote
   }
 
   /* 标签 */
-  if (tags && tags.length > 0) {
-    y = drawTags(ctx, tags, centerX, y, cardW - 80)
-    y += 50 // 增加标签与下方维度的间距，使维度分析整体下移
+  if (posterLayout.tagRows.length) {
+    y = drawTags(ctx, posterLayout.tagRows, centerX, y)
+    y += posterLayout.spacing.afterTags
   }
 
   /* 维度图表 (极简列表风，保留绿色系) */
-  if (dimensions && dimensions.length > 0) {
-    y = drawDimensionList(ctx, dimensions, cardX + 48, y, cardW - 96)
+  if (posterLayout.dimensionItems.length) {
+    y = drawDimensionList(ctx, posterLayout.dimensionItems, cardX + 48, y, cardW - 96)
   }
-
-  /* 底部区域 (固定在卡片底部) */
-  const footerHeight = 120
-  const footerY = cardY + cardH - footerHeight - 16
 
   /* 分隔线 */
   ctx.strokeStyle = PALETTE.divider
@@ -503,8 +706,7 @@ export async function generateShareImage(result) {
 
   /* QR 码 */
   try {
-    const qrUrl = window.location.href.split('?')[0]
-    const qrDataUrl = await QRCode.toDataURL(qrUrl, {
+    const qrDataUrl = await QRCode.toDataURL(canonicalUrl, {
       width: 120,
       margin: 1,
       color: { dark: '#1a1a1a', light: '#ffffff' },
@@ -529,20 +731,20 @@ export async function generateShareImage(result) {
   ctx.textAlign = 'left'
   ctx.fillStyle = PALETTE.text
   ctx.font = `700 22px ${FONT}`
-  ctx.fillText('扫码测测你是什么型', cardX + 132, footerY + 60)
+  ctx.fillText(footerQrLabel, cardX + 132, footerY + 60)
 
   ctx.fillStyle = PALETTE.textMuted
   ctx.font = `400 16px ${FONT}`
-  ctx.fillText(stripEndingPunctuation(share?.title || 'GBTI 股民人格测试'), cardX + 132, footerY + 88)
+  ctx.fillText(footerTitle, cardX + 132, footerY + 88)
 
   const dataUrl = canvas.toDataURL('image/png', 1.0)
 
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV || forceDataUrl) {
     return dataUrl
   }
 
   const link = document.createElement('a')
-  link.download = share.fileName || `GBTI-${hero.code}.png`
+  link.download = share.fileName || `test-result-${hero.code}.png`
   link.href = dataUrl
   link.click()
 

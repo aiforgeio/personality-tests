@@ -109,6 +109,7 @@ function validateDisplay(display) {
     'startButtonLabel',
     'restartButtonLabel',
     'downloadButtonLabel',
+    'shareBadgeText',
   ].forEach((key) => {
     assertOptionalString(display[key], `pack.display.${key} must be a string`)
   })
@@ -119,6 +120,10 @@ function validateDisplay(display) {
 
   if (display.spotlightCodes != null) {
     assertStringArray(display.spotlightCodes, 'pack.display.spotlightCodes must be an array of strings')
+  }
+
+  if (display.loadingMessages != null) {
+    assertStringArray(display.loadingMessages, 'pack.display.loadingMessages must be an array of strings')
   }
 
   if (display.benefits != null) {
@@ -146,6 +151,16 @@ function validateSpecialLogic(specialLogic) {
       'pack.specialLogic.similarityFloor must be a non-negative number',
     )
   }
+}
+
+function validateFeatures(features) {
+  assert(isPlainObject(features), 'pack.features must be an object')
+
+  ;['gallery', 'leaderboard', 'analytics'].forEach((key) => {
+    if (features[key] != null) {
+      assert(typeof features[key] === 'boolean', `pack.features.${key} must be a boolean`)
+    }
+  })
 }
 
 function validateDimensionExplanation(value, label) {
@@ -298,6 +313,10 @@ export function validatePackManifest(manifest) {
     assert(isPlainObject(manifest.assets), 'pack.assets must be an object')
   }
 
+  if (manifest.features != null) {
+    validateFeatures(manifest.features)
+  }
+
   ;['specialQuestionsPath', 'dimensionsPath', 'patternsPath'].forEach((pathKey) => {
     assertOptionalString(manifest[pathKey], `pack.${pathKey} must be a string`)
   })
@@ -313,9 +332,16 @@ export function validatePackManifest(manifest) {
   ;[
     'promptTitle',
     'promptBody',
+    'inlinePromptTitle',
+    'inlinePromptBody',
+    'inlinePrimaryActionLabel',
     'primaryActionLabel',
     'secondaryActionLabel',
     'floatingLabel',
+    'nudgeLabel',
+    'revealToast',
+    'badgeText',
+    'qrLabel',
   ].forEach((key) => {
     if (manifest.shareConfig[key] != null) {
       assertOptionalString(manifest.shareConfig[key], `pack.shareConfig.${key} must be a string`)

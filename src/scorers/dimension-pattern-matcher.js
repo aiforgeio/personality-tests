@@ -160,13 +160,23 @@ function resolveDimensionLevel(pack, dimensionId, score) {
   const level = rules[safeIndex]
   const maxIndex = Math.max(rules.length - 1, 1)
 
+  // 计算连续百分比：在当前 level 的范围内插值，避免 L 级别永远是 0%
+  // 每个 level 占总宽度的 1/maxIndex，在 level 内部再做线性插值
+  const levelMin = Number.isFinite(level.min) ? level.min : score
+  const levelMax = Number.isFinite(level.max) ? level.max : score + 1
+  const levelWidth = Math.max(levelMax - levelMin, 1)
+  const intraLevelPct = Math.min(Math.max((score - levelMin) / levelWidth, 0), 1)
+  const segmentSize = 100 / (maxIndex + 1)
+  const baseOffset = safeIndex * segmentSize
+  const percentage = Math.min(Math.max(baseOffset + intraLevelPct * segmentSize, 0), 100)
+
   return {
     id: dimensionId,
     score,
     index: safeIndex,
     levelCode: level.code,
     levelLabel: level.label,
-    percentage: Math.min(Math.max((safeIndex / maxIndex) * 100, 0), 100),
+    percentage: Math.round(percentage),
   }
 }
 
@@ -201,6 +211,7 @@ function buildDimensionResults(pack, answers) {
       id: dimensionId,
       label: meta.label ?? meta.title ?? dimensionId,
       shortLabel: meta.shortLabel ?? meta.label ?? dimensionId,
+      summaryLabel: meta.summaryLabel ?? meta.shortLabel ?? meta.label ?? dimensionId,
       model: meta.model ?? '',
       description: resolveDimensionExplanation(pack, dimensionId, result.levelCode),
       ...result,
@@ -318,11 +329,11 @@ function buildHeroOutcome(pack, bestNormal, specialState, dimensions) {
     return {
       ...specialOutcome,
       score: 100,
-      kicker: '隐藏人格已激活',
-      sub: specialOutcome.sub ?? '你在关键题中触发了隐藏人格，本次结果优先走特殊归档。',
+      kicker: '隐藏结果已激活',
+      sub: specialOutcome.sub ?? '你在关键题中触发了隐藏结果，本次结果优先走特殊归档。',
       note: specialOutcome.note ?? (
         bestNormal?.code
-          ? `常规人格中你最接近 ${bestNormal.alias ?? bestNormal.code}，但隐藏触发条件优先生效。`
+          ? `常规结果中你最接近 ${bestNormal.alias ?? bestNormal.code}，但隐藏触发条件优先生效。`
           : '隐藏触发条件优先生效。'
       ),
       exactMatches: bestNormal?.exactMatches ?? 0,
@@ -347,8 +358,8 @@ function buildHeroOutcome(pack, bestNormal, specialState, dimensions) {
 
   return {
     ...bestNormal,
-    kicker: bestNormal?.kicker ?? '你的主类型',
-    sub: bestNormal?.sub ?? '维度命中度较高，当前结果可视为你的交易风格画像。',
+    kicker: bestNormal?.kicker ?? '你的主结果',
+    sub: bestNormal?.sub ?? '维度命中度较高，当前结果可视为你的主要类型画像。',
     note: bestNormal?.note ?? '',
   }
 }
@@ -371,9 +382,9 @@ export function scoreDimensionPatternMatcher({ answers, pack, flowState }) {
   const bestNormal = rankedNormalOutcomes[0] ?? {}
   const specialState = createSpecialState(pack, answersByQuestionId, bestNormal)
   const heroOutcome = buildHeroOutcome(pack, bestNormal, specialState, dimensions)
-  const secondaryHeroOutcome = specialState.reason === 'normal' || bestNormal?.code === heroOutcome.code
+  const secondaryHeroOutcome = specialState.reason === 'normal'
     ? null
-    : bestNormal
+    : (bestNormal?.code ? bestNormal : null)
   const rankingOutcomes = specialState.reason === 'normal'
     ? rankedNormalOutcomes
     : [
@@ -400,7 +411,7 @@ export function scoreDimensionPatternMatcher({ answers, pack, flowState }) {
       stats: [
         { label: '匹配度', value: `${heroOutcome.score ?? 0}%`, tone: 'accent' },
         { label: '精准命中', value: `${heroOutcome.exactMatches ?? bestNormal.exactMatches ?? 0}/${totalDimensions} 维` },
-        { label: '常规命中', value: formatNormalPrimary(bestNormal) || '未命中' },
+        { label: '常规结果', value: formatNormalPrimary(bestNormal) || '未命中' },
       ],
     },
     raw: {

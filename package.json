@@ -8,6 +8,7 @@
     "build:pages": "vite build --base=/personality-tests/",
     "preview": "vite preview",
     "generate-packs": "node ./scripts/generate-packs.mjs",
+    "import-legacy-packs": "node ./scripts/import-legacy-packs.mjs",
     "validate": "node ./scripts/validate.mjs",
     "test": "npm run validate"
   },

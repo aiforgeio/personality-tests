@@ -4,7 +4,7 @@ import { createNoopResultReporter } from './reporters/index.js'
 import { createResultView } from './result.js'
 import { createScorerRegistry } from './scorers/index.js'
 import { createLocalTestPackSource } from './test-pack/source.js'
-import { compactCardText, stripEndingPunctuation } from './utils.js'
+import { compactCardText, resolveCanonicalTestUrl, stripEndingPunctuation } from './utils.js'
 
 /* ---- 工具函数 ---- */
 
@@ -16,7 +16,7 @@ function setText(element, value) {
 }
 
 function buildStatsLine(pack) {
-  return `${pack.questions.length} 道维度题 · ${pack.outcomes.length} 种人格结果 · 即测即出结果`
+  return `${pack.questions.length} 道维度题 · ${pack.outcomes.length} 种类型结果 · 即测即出结果`
 }
 
 function buildDurationLabel(pack) {
@@ -36,11 +36,17 @@ function resolveLinkShareCTA(pack) {
   if (typeof custom === 'string' && custom.trim()) {
     return custom.trim()
   }
-  return '来测测你的人格类型'
+  return '来测测你的类型结果'
 }
 
 function buildLinkShareText(pack, url) {
   return `${resolveLinkShareCTA(pack)}：${url}`
+}
+
+function resolveResultShareUrl({ result = null, pack = null, manifest = null } = {}) {
+  return result?.share?.url
+    || resolveCanonicalTestUrl(pack || manifest || {})
+    || (typeof window !== 'undefined' ? window.location.href.split('?')[0] : '')
 }
 
 function clearContainer(element) {
@@ -119,9 +125,9 @@ function triggerConfetti() {
 
 /* ---- Loading 动画控制 ---- */
 
-const LOADING_MESSAGES = [
+const DEFAULT_LOADING_MESSAGES = [
   '正在分析你的性格特征',
-  '正在匹配交易人格类型',
+  '正在匹配测试结果类型',
   '正在计算维度分布',
   '即将揭晓你的专属结果',
 ]
@@ -129,14 +135,14 @@ const LOADING_MESSAGES = [
 let loadingTimer = null
 let loadingMessageTimer = null
 
-function startLoadingAnimation() {
+function startLoadingAnimation(messageList = DEFAULT_LOADING_MESSAGES) {
   const progressFill = document.getElementById('loading-progress-fill')
   const messages = document.querySelectorAll('.loading-message')
 
   // 重置
   if (progressFill) progressFill.style.width = '0%'
   messages.forEach((msg, index) => {
-    const text = LOADING_MESSAGES[index] || msg.textContent
+    const text = messageList[index] || DEFAULT_LOADING_MESSAGES[index] || msg.textContent
     msg.textContent = stripEndingPunctuation(text)
     msg.classList.remove('active')
   })
@@ -274,12 +280,20 @@ function renderSpotlight(container, pack, codes = []) {
   container.hidden = items.length === 0
 }
 
+function resolveLoadingMessages(display = {}) {
+  return Array.isArray(display.loadingMessages) && display.loadingMessages.length > 0
+    ? display.loadingMessages
+    : DEFAULT_LOADING_MESSAGES
+}
+
 /* ---- 主控制器 ---- */
 
 export function createAppController({
   packSource = createLocalTestPackSource(),
   scorerRegistry = createScorerRegistry(),
   resultReporter = createNoopResultReporter(),
+  manifestPath = '',
+  autoStart = false,
 } = {}) {
   const pages = {
     intro: document.getElementById('page-intro'),
@@ -305,6 +319,10 @@ export function createAppController({
     descriptionMeta: document.querySelector('meta[name="description"]'),
     ogTitle: document.querySelector('meta[property="og:title"]'),
     ogDescription: document.querySelector('meta[property="og:description"]'),
+    ogSiteName: document.querySelector('meta[property="og:site_name"]'),
+    twitterTitle: document.querySelector('meta[name="twitter:title"]'),
+    twitterDescription: document.querySelector('meta[name="twitter:description"]'),
+    appleTitle: document.querySelector('meta[name="apple-mobile-web-app-title"]'),
   }
 
   let activeManifest = null
@@ -378,13 +396,19 @@ function setStartButtonState({ disabled, label }) {
   function applyManifest(manifest) {
     activeManifest = manifest
     const display = manifest.display || {}
+    const browserTitle = manifest.meta?.browserTitle || '人格测试'
+    const desc = manifest.meta?.description || display.subtitle || ''
+    const appleTitle = browserTitle.replace(/\s*人格测试\s*$/, '').trim() || browserTitle
 
     // 更新页面标题和 meta
-    document.title = manifest.meta?.browserTitle || '人格测试'
-    const desc = manifest.meta?.description || display.subtitle || ''
+    document.title = browserTitle
     if (els.descriptionMeta) els.descriptionMeta.setAttribute('content', desc)
-    if (els.ogTitle) els.ogTitle.setAttribute('content', manifest.meta?.browserTitle || '人格测试')
+    if (els.ogTitle) els.ogTitle.setAttribute('content', browserTitle)
     if (els.ogDescription) els.ogDescription.setAttribute('content', desc)
+    if (els.ogSiteName) els.ogSiteName.setAttribute('content', browserTitle)
+    if (els.twitterTitle) els.twitterTitle.setAttribute('content', browserTitle)
+    if (els.twitterDescription) els.twitterDescription.setAttribute('content', desc)
+    if (els.appleTitle) els.appleTitle.setAttribute('content', appleTitle)
 
     renderIntroDisplay(display)
 
@@ -448,7 +472,11 @@ function setStartButtonState({ disabled, label }) {
 
   async function ensurePackLoaded() {
     if (!activePackPromise) {
-      activePackPromise = packSource.warmActivePack().then((pack) => {
+      const loadPack = manifestPath
+        ? () => packSource.loadPackByManifestPath(manifestPath)
+        : () => packSource.warmActivePack()
+
+      activePackPromise = loadPack().then((pack) => {
         activePack = pack
         applyPackDetails(pack)
         return pack
@@ -484,10 +512,10 @@ function setStartButtonState({ disabled, label }) {
   async function handleQuizComplete({ answers, flowState }) {
     // 1. 显示 loading 页面
     showPage('loading')
-    stopLoadingFn = startLoadingAnimation()
 
     try {
       const pack = await ensurePackLoaded()
+      stopLoadingFn = startLoadingAnimation(resolveLoadingMessages(pack.display || activeManifest?.display || {}))
       const scorer = scorerRegistry.get(pack.scorerId)
 
       latestResult = scorer.score({ answers, pack, flowState })
@@ -513,6 +541,11 @@ function setStartButtonState({ disabled, label }) {
       renderPageQR()
 
       setTimeout(triggerConfetti, 300)
+      setTimeout(() => {
+        const revealToast = pack.shareConfig?.revealToast
+          || '结果海报已经准备好，点一下就能发给朋友'
+        showToast(revealToast, 2200)
+      }, 700)
 
       // 5. 上报结果（静默失败）
       void resultReporter.reportResult({ pack, result: latestResult }).catch((error) => {
@@ -530,7 +563,7 @@ function setStartButtonState({ disabled, label }) {
 
     const defaultLabel = activePack.shareConfig?.primaryActionLabel
       || activePack.display?.downloadButtonLabel
-      || '保存海报'
+      || '保存结果海报'
     button.disabled = true
     const textEl = button.querySelector('span:last-child') || button
     const originalText = textEl.textContent
@@ -582,11 +615,11 @@ function setStartButtonState({ disabled, label }) {
         }
         showToast('截图已生成（Dev 预览模式）')
       } else {
-        showToast('海报已生成，快去分享吧')
+        showToast('结果海报已生成，快去分享吧')
       }
     } catch (error) {
       console.error('Download error:', error)
-      showToast('海报生成失败，请截图保存')
+      showToast('结果海报生成失败，请截图保存')
     } finally {
       button.disabled = false
       textEl.textContent = originalText || defaultLabel
@@ -608,7 +641,11 @@ function setStartButtonState({ disabled, label }) {
 
     try {
       const QRCode = (await import('qrcode')).default
-      const qrUrl = window.location.href.split('?')[0]
+      const qrUrl = resolveResultShareUrl({
+        result: latestResult,
+        pack: activePack,
+        manifest: activeManifest,
+      })
       const qrCanvas = await QRCode.toCanvas(qrUrl, {
         width: 88,
         margin: 1,
@@ -628,8 +665,12 @@ function setStartButtonState({ disabled, label }) {
     if (!els.shareButton) return
 
     els.shareButton.addEventListener('click', () => {
-      const url = window.location.href
-      const title = activeManifest?.meta?.browserTitle || 'GBTI 股民人格测试'
+      const url = resolveResultShareUrl({
+        result: latestResult,
+        pack: activePack,
+        manifest: activeManifest,
+      })
+      const title = activeManifest?.meta?.browserTitle || '人格测试'
       const shareCTA = resolveLinkShareCTA(activePack)
       const copyText = buildLinkShareText(activePack, url)
 
@@ -668,14 +709,25 @@ function setStartButtonState({ disabled, label }) {
       }
       
       if (devMode === 'result') {
-        // 模拟一个随机答题结果
-        const mockAnswers = pack.questions.map(q => ({
-          questionId: q.id,
-          optionId: q.options[Math.floor(Math.random() * q.options.length)].id
-        }))
-        
+        // 模拟一个随机答题结果，保持与正式评分器一致的答案结构
+        const mockAnswers = Object.fromEntries(
+          (pack.questions || []).map((question) => {
+            const optionIndex = Math.floor(Math.random() * question.options.length)
+            return [question.id, { questionId: question.id, optionIndex }]
+          }),
+        )
+
         const scorer = scorerRegistry.get(pack.scorerId)
-        latestResult = scorer.score({ answers: mockAnswers, pack, flowState: {} })
+        latestResult = scorer.score({
+          answers: mockAnswers,
+          pack,
+          flowState: {
+            mode: pack.flow?.mode || 'linear',
+            questionIds: (pack.questions || []).map((question) => String(question.id)),
+            insertedQuestionIds: [],
+            sessionBaseQuestionIds: (pack.questions || []).map((question) => String(question.id)),
+          },
+        })
 
         resultView.configure({
           display: pack.display || {},
@@ -707,11 +759,16 @@ function setStartButtonState({ disabled, label }) {
     setupShareButton()
 
     try {
-      const manifest = await packSource.loadActiveManifest()
+      const manifest = manifestPath
+        ? await packSource.loadManifestByPath(manifestPath)
+        : await packSource.loadActiveManifest()
       applyManifest(manifest)
 
-      // 预加载测试包
-      activePackPromise = packSource.warmActivePack().then((pack) => {
+      const warmPack = manifestPath
+        ? () => packSource.loadPackByManifestPath(manifestPath)
+        : () => packSource.warmActivePack()
+
+      activePackPromise = warmPack().then((pack) => {
         activePack = pack
         applyPackDetails(pack)
         return pack
@@ -720,8 +777,13 @@ function setStartButtonState({ disabled, label }) {
       // 检查是否需要进入开发模式
       const isDevHandled = await checkDevMode()
       if (!isDevHandled) {
-        // 正常显示首页
-        showPage('intro')
+        if (autoStart) {
+          const pack = await ensurePackLoaded()
+          quizView.start(pack)
+          showPage('quiz')
+        } else {
+          showPage('intro')
+        }
       }
     } catch (error) {
       showLoadError(error)

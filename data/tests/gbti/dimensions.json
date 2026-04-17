@@ -19,62 +19,77 @@
   "meta": {
     "R1": {
       "label": "R1 风险承受力",
+      "summaryLabel": "风险偏好",
       "model": "风险模型"
     },
     "R2": {
       "label": "R2 回撤耐受力",
+      "summaryLabel": "回撤耐受",
       "model": "风险模型"
     },
     "R3": {
       "label": "R3 杠杆冲动",
+      "summaryLabel": "杠杆倾向",
       "model": "风险模型"
     },
     "T1": {
       "label": "T1 出手频率",
+      "summaryLabel": "出手频率",
       "model": "交易节奏模型"
     },
     "T2": {
       "label": "T2 持有耐心",
+      "summaryLabel": "持有耐心",
       "model": "交易节奏模型"
     },
     "T3": {
       "label": "T3 纪律执行",
+      "summaryLabel": "纪律执行",
       "model": "交易节奏模型"
     },
     "I1": {
       "label": "I1 消息依赖度",
+      "summaryLabel": "消息依赖",
       "model": "信息模型"
     },
     "I2": {
       "label": "I2 独立研究度",
+      "summaryLabel": "独立研究",
       "model": "信息模型"
     },
     "I3": {
       "label": "I3 题材追逐度",
+      "summaryLabel": "题材追逐",
       "model": "信息模型"
     },
     "M1": {
       "label": "M1 情绪稳定度",
+      "summaryLabel": "情绪稳定",
       "model": "情绪模型"
     },
     "M2": {
       "label": "M2 FOMO 强度",
+      "summaryLabel": "FOMO 强度",
       "model": "情绪模型"
     },
     "M3": {
       "label": "M3 止损果断度",
+      "summaryLabel": "止损果断",
       "model": "情绪模型"
     },
     "S1": {
       "label": "S1 仓位管理力",
+      "summaryLabel": "仓位管理",
       "model": "策略模型"
     },
     "S2": {
       "label": "S2 复盘习惯",
+      "summaryLabel": "复盘习惯",
       "model": "策略模型"
     },
     "S3": {
       "label": "S3 规则一致性",
+      "summaryLabel": "规则一致",
       "model": "策略模型"
     }
   },

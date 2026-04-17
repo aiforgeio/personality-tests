@@ -1,0 +1,692 @@
+[
+  {
+    "id": "q1",
+    "prompt": "你在文献里偶然发现一个和你课题完全无关、但极其有趣的现象，你会：",
+    "dim": "R1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "收藏一下，回到正事上。发论文要紧。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "花半天了解一下，然后克制住自己。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "一头扎进去，等你抬头发现天黑了。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q2",
+    "prompt": "如果明天不用担心毕业/考核/经费，你还会做科研吗？",
+    "dim": "R1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "那我为什么还要做科研？",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "可能会做，但换个更轻松的方式。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "当然会！终于可以做自己真正想做的了。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q3",
+    "prompt": "你对自己学术生涯的终极期望是：",
+    "dim": "R2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "安全着陆就行——毕业/续聘，不掉队。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "发几篇不错的文章，在圈子里有个名字。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "顶刊/大奖/学术影响力，我全都要。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q4",
+    "prompt": "看到同届/同龄人发了Nature/Science，你的第一反应是：",
+    "dim": "R2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "跟我有什么关系，人各有命。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "有点酸，但也知道差距在哪。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "我也可以，给我时间。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q5",
+    "prompt": "导师给了你两个选题：A是成熟方向，发论文稳妥；B是全新方向，可能颠覆也可能颗粒无收。你选：",
+    "dim": "R3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "选A。稳稳地毕业比什么都重要。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "先做A保底，偷偷摸摸试试B。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "选B。做科研不就是为了探索未知吗？",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q6",
+    "prompt": "你在组会上提了一个大胆的想法，导师说\"这个太冒险了\"，你会：",
+    "dim": "R3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "好的老师，那就算了。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "嗯……我再想想折中方案。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "我偷偷先做个预实验看看。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q7",
+    "prompt": "新学期开始，你的科研计划通常是：",
+    "dim": "W1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "计划？什么计划？走到哪算哪。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "脑子里有个大概，但不会写下来。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "甘特图/日程表已经排好了，精确到周。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q8",
+    "prompt": "你的电脑桌面和实验记录本最可能是什么状态：",
+    "dim": "W1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "桌面全是\"新建文件夹\"，记录本找不到了。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "有一定结构，但经常忘记更新。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "分门别类，版本号清清楚楚。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q9",
+    "prompt": "论文已经改了第八版，导师说\"差不多可以投了\"，你会：",
+    "dim": "W2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "早该投了，第三版就够了。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "好的，那就投吧。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "等等，我觉得引言第二段还能再改改。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q10",
+    "prompt": "你做的图表，数据都对，但配色不太好看，你会：",
+    "dim": "W2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "能看就行，审稿人不看颜色。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "稍微调调，别太丑就行。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "花两小时找配色方案，必须赏心悦目。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q11",
+    "prompt": "距离会议投稿还有两个月，你的进度最可能是：",
+    "dim": "W3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "前五十天酝酿人生，最后十天爆肝写完。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "断断续续推进，最后一周加速冲刺。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "第一周就列好大纲，每天稳定写一点。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q12",
+    "prompt": "没有明确deadline的时候，你每天的科研产出通常是：",
+    "dim": "W3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "基本为零。没DDL我就是废人。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "看心情，有时干劲十足有时完全摸鱼。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "每天都保持差不多的产出节奏。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q13",
+    "prompt": "导师说\"这个项目你找两个同学一起做\"，你内心：",
+    "dim": "S1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "求你了让我一个人做吧。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "看是谁，靠谱的话可以。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "太好了！人多力量大！",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q14",
+    "prompt": "你更倾向于哪种论文署名方式：",
+    "dim": "S1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "独立一作，从头到尾自己搞定。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "共同一作也OK，各有分工。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "一个大团队，人越多越壮观。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q15",
+    "prompt": "你在国际会议上发现你引用最多的那篇论文的作者就坐你旁边，你会：",
+    "dim": "S2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "心跳加速但全程沉默，回去发朋友圈。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "鼓起勇气说一句\"很喜欢您那篇论文\"，然后逃走。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "坐过去自我介绍，聊完加个LinkedIn。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q16",
+    "prompt": "关于参加学术会议，你的态度是：",
+    "dim": "S2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "能不去就不去，社恐发作。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "有目标性地参加，认识该认识的人。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "每个会都想去！networking才是正事。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q17",
+    "prompt": "导师给了一个你觉得有问题的研究方案，你会：",
+    "dim": "S3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "老师说啥就做啥，老师肯定比我懂。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "找个合适的时机委婉提出自己的看法。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "直接说我觉得这个方案有问题，然后给出替代方案。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q18",
+    "prompt": "关于你和导师的关系，最贴切的描述是：",
+    "dim": "S3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "导师是天，我是地。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "亦师亦友，可以商量。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "导师是顾问，我自己拿主意。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q19",
+    "prompt": "你精心打磨三个月的论文被拒了，审稿意见写着\"novelty不足\"，你的第一反应是：",
+    "dim": "M1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "关上电脑，去操场走三圈，怀疑人生。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "骂两句审稿人，难受一天，然后开始改。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "打开审稿意见逐条标注\"有道理/扯淡\"，当天开始改投。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q20",
+    "prompt": "连续投了三篇都被拒，你会：",
+    "dim": "M1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "我是不是真的不适合做科研……",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "调整方向，想想是不是方法有问题。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "第四篇已经在路上了，拒稿是日常。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q21",
+    "prompt": "在一群优秀的科研同行中，你通常的感觉是：",
+    "dim": "M2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "我怎么混进来的？迟早被发现是个水货。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "有时自信有时心虚，看当天状态。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "我能在这里是有原因的，大家各有所长。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q22",
+    "prompt": "你获得了一项学术奖励/发表了好论文，你会觉得：",
+    "dim": "M2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "运气好/审稿人放水了吧……",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "值得高兴，但也有不足之处。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "这是我努力的结果，实至名归。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q23",
+    "prompt": "半夜躺在床上，你最容易想的事情是：",
+    "dim": "M3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "毕不了业怎么办/找不到教职怎么办/经费断了怎么办。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "偶尔焦虑，但大多数时候能入睡。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "想啥呢，倒头就睡，明天的事明天说。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q24",
+    "prompt": "关于\"未来\"这件事，你更接近哪种状态：",
+    "dim": "M3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "经常焦虑到影响日常工作和生活。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "有时想想，但不至于影响心情。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "船到桥头自然直，焦虑也没用。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q25",
+    "prompt": "导师让你调研一个新方向，你的习惯是：",
+    "dim": "K1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "先读50篇论文，画好知识图谱再动手。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "读几篇核心的，边做边补文献。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "先跑个baseline出来，哪里卡了再去查。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q26",
+    "prompt": "你的Zotero/EndNote里的论文数量vs你真正精读过的论文数量，比例大概是：",
+    "dim": "K1",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "100:5。收藏就是读过（自我催眠）。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "100:30。核心的会认真看。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "我不囤太多，看一篇消化一篇然后动手。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q27",
+    "prompt": "面对一篇待写的论文，你的状态通常是：",
+    "dim": "K2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "打开Word，光标闪了两小时我就写了个标题。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "能写但很痛苦，需要仪式感（音乐、咖啡、deadline）。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "打开电脑就能写，文字对我来说不是障碍。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q28",
+    "prompt": "一篇论文的初稿，你一般需要多久：",
+    "dim": "K2",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "以\"月\"为单位，每一段都是煎熬。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "几周吧，算正常速度。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "集中几天就能写完，写作是我的舒适区。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q29",
+    "prompt": "你更享受哪种科研工作：",
+    "dim": "K3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "复现经典方法，在已有基础上改进。扎实可靠。",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "在已有框架上做渐进式创新。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "提出全新的方法/理论/范式，开辟新赛道。",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "q30",
+    "prompt": "审稿人说你的论文\"incremental\"，你的反应是：",
+    "dim": "K3",
+    "special": false,
+    "options": [
+      {
+        "id": "option-1",
+        "label": "科学就是渐进的，有什么问题？",
+        "value": 1
+      },
+      {
+        "id": "option-2",
+        "label": "嗯……下次可以做得更大胆一些。",
+        "value": 2
+      },
+      {
+        "id": "option-3",
+        "label": "不可能，我这个明明是全新思路！",
+        "value": 3
+      }
+    ]
+  }
+]
