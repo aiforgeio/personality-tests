@@ -73,6 +73,46 @@ export function toLines(text, limit = 22) {
   return lines
 }
 
+export function toSmartLines(text, maxLineChars = 22) {
+  if (!text) return []
+  const chars = Array.from(text)
+  
+  // 如果文本长度小于等于单行限制，直接返回单行
+  if (chars.length <= maxLineChars) {
+    return [text]
+  }
+
+  // 寻找中间附近的标点断点
+  const midpoint = Math.floor(chars.length / 2)
+  const punctuation = new Set(['，', '。', '、', '！', '？', '；', '：', '—', '…', ',', '.', '!', '?', ';', ':'])
+  
+  let bestBreak = -1
+  
+  // 从中间向两边搜索最近的标点
+  for (let offset = 0; offset <= midpoint; offset++) {
+    // 向右找
+    if (midpoint + offset < chars.length && punctuation.has(chars[midpoint + offset])) {
+      bestBreak = midpoint + offset + 1
+      break
+    }
+    // 向左找
+    if (midpoint - offset >= 0 && punctuation.has(chars[midpoint - offset])) {
+      bestBreak = midpoint - offset + 1
+      break
+    }
+  }
+  
+  // 如果没找到标点，在中间位置硬切
+  if (bestBreak === -1) {
+    bestBreak = midpoint
+  }
+  
+  const line1 = chars.slice(0, bestBreak).join('').trim()
+  const line2 = chars.slice(bestBreak).join('').trim()
+  
+  return [line1, line2].filter(Boolean)
+}
+
 export function getByPath(source, path, fallback = undefined) {
   if (!path) return fallback
 

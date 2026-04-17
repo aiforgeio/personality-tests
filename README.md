@@ -2,9 +2,9 @@
 
 `personality-tests` is a lightweight frontend host for interactive personality and archetype quizzes.
 
-It is designed as a reusable static site foundation rather than a one-off test page. The repository can host multiple test packs with shared flow logic, local scoring, result pages, and shareable poster generation. That makes it suitable for projects like `GBTI`, `SBTI`, `MBTI`, and future variants in the same family.
+It is designed as a reusable static site foundation rather than a one-off test page. The repository can host multiple test packs with shared flow logic, local scoring, result pages, and shareable poster generation. That makes it suitable for projects like `GBTI`, `SBTI`, `ABTI`, `MPTI`, and future variants in the same family.
 
-The current default active pack is `gbti`, and the repository also includes `sbti` as a built-in example. Questions, dimensions, outcomes, share copy, and media assets are all organized by test pack. The frontend loads the selected pack and computes results fully in the browser, so the whole experience can run as a static site without a backend.
+The current default active pack is `gbti`, and the repository also includes `sbti`, `abti`, and `mpti` as built-in packs. Questions, dimensions, outcomes, share copy, and media assets are all organized by test pack. The frontend loads the selected pack and computes results fully in the browser, so the whole experience can run as a static site without a backend.
 
 ## What This Repo Provides
 
@@ -12,7 +12,7 @@ The current default active pack is `gbti`, and the repository also includes `sbt
 - Local result calculation in the browser
 - Reusable result-page and poster-sharing flows
 - Pack-based content switching without rewriting the app shell
-- Built-in `gbti` and `sbti` example packs for extension
+- Built-in `gbti`, `sbti`, `abti`, and `mpti` packs for extension
 
 ## Development
 
@@ -46,6 +46,12 @@ Validate pack data before release:
 npm run validate
 ```
 
+Import legacy standalone packs into normalized test-pack data:
+
+```bash
+npm run import-legacy-packs
+```
+
 ## Switching The Active Test
 
 To change which test is currently loaded, update [data/active-test.json](/Users/macbook/Workspace/个人创作/SBTI/GBTI/data/active-test.json). Point `id` and `manifestPath` to the test pack you want to activate.
@@ -59,7 +65,7 @@ The default configuration is:
 }
 ```
 
-If you switch it to `sbti`, the application will load the `sbti` content pack while keeping the same runtime flow, result rendering, and sharing pipeline.
+If you switch it to `sbti`, `abti`, or `mpti`, the application will load that content pack while keeping the same runtime flow, result rendering, and sharing pipeline.
 
 ## Deployment Notes
 

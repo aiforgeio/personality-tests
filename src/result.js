@@ -218,7 +218,7 @@ function renderDimensionList(container, items) {
         <div class="dimension-score">${displayLevel}</div>
       </div>
       <div class="dimension-track">
-        <div class="dimension-fill" data-pct="${item.percentage}" style="width: 0%"></div>
+        <div class="dimension-fill" data-pct="${item.percentage}" style="width: 0%; min-width: 6px"></div>
       </div>
       <div class="dimension-desc">${descriptionText}</div>
     `

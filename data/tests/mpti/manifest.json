@@ -1,0 +1,139 @@
+{
+  "id": "mpti",
+  "scorerId": "dimension-pattern-matcher",
+  "questionsPath": "./questions.json",
+  "outcomesPath": "./outcomes.json",
+  "specialQuestionsPath": "./special-questions.json",
+  "dimensionsPath": "./dimensions.json",
+  "patternsPath": "./patterns.json",
+  "meta": {
+    "browserTitle": "MPTI 导师人格测试",
+    "description": "18 道题、18 个维度、18 种导师人格结果的趣味测试。",
+    "version": "1.0.0"
+  },
+  "display": {
+    "introEyebrow": "MPTI · 导师人格测试",
+    "introTitle": "测一测，你的导师到底是哪种带组生物？",
+    "subtitle": "从学生视角出发，用 18 个维度快速勾勒一位导师最接近哪种人格画像。",
+    "statsLine": "18 道维度题 · 18 种导师人格 · 即测即出结果",
+    "estimatedDurationLabel": "预计 2-3 分钟",
+    "secondaryNote": "围绕带组、反馈、边界、资源和署名等真实体验设计，结果更容易对号入座。",
+    "trustBadges": [
+      "免费体验",
+      "无需登录",
+      "可保存结果海报"
+    ],
+    "benefits": [
+      {
+        "title": "视角很统一",
+        "text": "所有题目都从学生真实体验出发，集中看导师在推进、反馈和资源分配上的风格。"
+      },
+      {
+        "title": "四档更细",
+        "text": "18 个维度采用 L/M/H/X 四档差异，能把普通高位和极端高位分得更开。"
+      },
+      {
+        "title": "结果更有戏",
+        "text": "既能命中常规导师人格，也保留量子导师和 NULL 这种隐藏/兜底结果。"
+      }
+    ],
+    "spotlightCodes": [
+      "GOAT",
+      "CTRL",
+      "WIFI"
+    ],
+    "disclaimer": "本测试仅供娱乐，请勿将结果用于正式投诉、评价、选导决策或任何现实判断。",
+    "startButtonLabel": "开始测试",
+    "restartButtonLabel": "重新测试",
+    "downloadButtonLabel": "保存结果海报",
+    "loadingMessages": [
+      "正在分析这位导师的带组风格",
+      "正在匹配导师人格类型",
+      "正在整理十八维度观察结果",
+      "这位导师的画像即将揭晓"
+    ]
+  },
+  "flow": {
+    "mode": "conditional",
+    "shuffleQuestions": true,
+    "staticInsertions": [
+      {
+        "questionId": "ghost_gate_q1",
+        "strategy": "random-slot",
+        "minIndex": 1
+      }
+    ]
+  },
+  "specialLogic": {
+    "gateQuestionId": "ghost_gate_q1",
+    "gateValues": [
+      4
+    ],
+    "insertQuestionId": "ghost_gate_q2",
+    "insertAfterQuestionId": "ghost_gate_q1",
+    "triggerQuestionId": "ghost_gate_q2",
+    "triggerValue": 2,
+    "hiddenTypeCode": "WIFI",
+    "fallbackTypeCode": "NULL",
+    "similarityFloor": 60
+  },
+  "assets": {
+    "posterMode": "image"
+  },
+  "resultTemplate": {
+    "sections": [
+      {
+        "id": "hero-art",
+        "type": "image-panel",
+        "group": "hero-top",
+        "card": true
+      },
+      {
+        "id": "hero-summary",
+        "type": "hero-summary",
+        "group": "hero-top",
+        "card": true
+      },
+      {
+        "id": "stats",
+        "type": "stats-inline",
+        "source": "meta.stats"
+      },
+      {
+        "id": "dimensions",
+        "type": "dimension-list",
+        "title": "十八维度分布",
+        "source": "dimensions"
+      }
+    ],
+    "disclaimer": {
+      "source": "pack.display.disclaimer"
+    }
+  },
+  "shareConfig": {
+    "title": "MPTI 导师人格测试",
+    "linkCopyText": "来测测你的导师人格类型",
+    "promptTitle": "这个导师人格很适合发给朋友对照一下",
+    "promptBody": "生成结果海报发给朋友，看看你们的导师更像 GOAT、CTRL 还是量子 WIFI。",
+    "inlinePromptTitle": "把这张导师人格海报发给朋友对照一下",
+    "inlinePromptBody": "一键生成结果海报，看看谁的导师更像 GOAT，谁又更像 NULL。",
+    "inlinePrimaryActionLabel": "生成结果海报",
+    "primaryActionLabel": "生成海报",
+    "secondaryActionLabel": "分享链接",
+    "floatingLabel": "生成海报",
+    "nudgeLabel": "生成海报，发给朋友",
+    "revealToast": "结果海报已经准备好，发给朋友一起对照导师人格",
+    "footer": "MPTI · 导师人格测试 · 仅供娱乐",
+    "rankingTitle": "常规人格 TOP 3",
+    "rankingLimit": 3,
+    "badgeLabel": "匹配度",
+    "filenamePrefix": "MPTI",
+    "badgeText": "你抽到的导师人格是",
+    "qrLabel": "扫码测测导师人格"
+  },
+  "features": {
+    "gallery": true,
+    "leaderboard": true,
+    "analytics": true
+  }
+}

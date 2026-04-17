@@ -12,49 +12,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const projectRoot = path.resolve(__dirname, '..')
 
-const PACK_IDS = ['gbti', 'sbti']
-const LEVEL_TO_TARGET_VALUES = {
-  L: [1, 1],
-  M: [1, 3],
-  H: [3, 3],
-}
-
-const FALLBACK_LEVELS = {
-  gbti: {
-    R1: 'H',
-    R2: 'H',
-    R3: 'M',
-    T1: 'L',
-    T2: 'H',
-    T3: 'L',
-    I1: 'L',
-    I2: 'M',
-    I3: 'L',
-    M1: 'L',
-    M2: 'H',
-    M3: 'M',
-    S1: 'M',
-    S2: 'M',
-    S3: 'M',
-  },
-  sbti: {
-    S1: 'L',
-    S2: 'L',
-    S3: 'L',
-    E1: 'H',
-    E2: 'H',
-    E3: 'M',
-    A1: 'H',
-    A2: 'H',
-    A3: 'H',
-    Ac1: 'M',
-    Ac2: 'H',
-    Ac3: 'L',
-    So1: 'L',
-    So2: 'L',
-    So3: 'M',
-  },
-}
+const PACK_IDS = ['gbti', 'sbti', 'abti', 'mpti']
 
 const MONTE_CARLO_SAMPLE_COUNT = 2400
 const MONTE_CARLO_SEED = 0x5b1a2026
@@ -134,25 +92,75 @@ function getRegularQuestionsByDimension(pack) {
   }, new Map())
 }
 
+function getScaleRules(pack, dimensionId) {
+  const rules = pack.dimensions?.sumToLevel?.[dimensionId]
+  assert(Array.isArray(rules) && rules.length > 0, `${pack.id}:${dimensionId} should define sumToLevel rules`)
+
+  return rules.map((rule) => ({
+    code: rule.code,
+    min: rule.min ?? Number.NEGATIVE_INFINITY,
+    max: rule.max ?? Number.POSITIVE_INFINITY,
+  }))
+}
+
+function resolveLevelCode(pack, dimensionId, score) {
+  const rules = getScaleRules(pack, dimensionId)
+  const hit = rules.find((rule) => score >= rule.min && score < rule.max)
+  assert(hit, `${pack.id}:${dimensionId} should resolve a rule for score ${score}`)
+  return hit.code
+}
+
+function findOptionIndexesForLevel(pack, dimensionId, questions, targetLevelCode) {
+  const picks = []
+
+  function search(index, score) {
+    if (index >= questions.length) {
+      return resolveLevelCode(pack, dimensionId, score) === targetLevelCode
+    }
+
+    const question = questions[index]
+    for (let optionIndex = 0; optionIndex < question.options.length; optionIndex += 1) {
+      const option = question.options[optionIndex]
+      picks[index] = optionIndex
+      if (search(index + 1, score + Number(option.value || 0))) {
+        return true
+      }
+    }
+    return false
+  }
+
+  const matched = search(0, 0)
+  assert(matched, `${pack.id}:${dimensionId} should expose an answer combination for ${targetLevelCode}`)
+  return [...picks]
+}
+
 function buildAnswerPlanFromLevels(pack, levels) {
   const byDimension = getRegularQuestionsByDimension(pack)
   const plan = {}
 
   pack.dimensions.order.forEach((dimensionId) => {
     const questions = byDimension.get(String(dimensionId)) || []
-    assert.equal(questions.length, 2, `${pack.id}:${dimensionId} should map to 2 regular questions`)
+    assert(questions.length > 0, `${pack.id}:${dimensionId} should map to at least one regular question`)
 
-    const targetValues = LEVEL_TO_TARGET_VALUES[levels[dimensionId]]
-    assert(targetValues, `${pack.id}:${dimensionId} must resolve to L/M/H`)
+    const targetLevelCode = levels[dimensionId]
+    assert(targetLevelCode, `${pack.id}:${dimensionId} must resolve to a target level code`)
 
+    const optionIndexes = findOptionIndexesForLevel(pack, dimensionId, questions, targetLevelCode)
     questions.forEach((question, index) => {
-      const optionIndex = question.options.findIndex((option) => Number(option.value) === targetValues[index])
-      assert(optionIndex >= 0, `${pack.id}:${question.id} should expose value ${targetValues[index]}`)
-      plan[question.id] = optionIndex
+      plan[question.id] = optionIndexes[index]
     })
   })
 
   return plan
+}
+
+function findOptionIndexByValue(question, expectedValue, label) {
+  const optionIndex = question.options.findIndex((option) => {
+    return Number(option.value) === Number(expectedValue)
+  })
+
+  assert(optionIndex >= 0, `${label} should expose value ${expectedValue}`)
+  return optionIndex
 }
 
 function createScenarioPlan(pack, { levels, triggerGate = false, triggerHidden = false }) {
@@ -161,11 +169,21 @@ function createScenarioPlan(pack, { levels, triggerGate = false, triggerHidden =
   const triggerQuestionId = pack.specialLogic?.triggerQuestionId
 
   if (gateQuestionId) {
-    plan[gateQuestionId] = triggerGate ? 2 : 0
+    const gateQuestion = pack.specialQuestions.find((question) => question.id === gateQuestionId)
+    assert(gateQuestion, `${pack.id}:${gateQuestionId} should exist in specialQuestions`)
+    const triggerValue = triggerGate
+      ? pack.specialLogic.gateValues?.[0]
+      : gateQuestion.options.find((option) => !pack.specialLogic.gateValues?.includes(Number(option.value)))?.value
+    plan[gateQuestionId] = findOptionIndexByValue(gateQuestion, triggerValue, `${pack.id}:${gateQuestionId}`)
   }
 
-  if (triggerQuestionId && triggerHidden) {
-    plan[triggerQuestionId] = 1
+  if (triggerQuestionId) {
+    const triggerQuestion = pack.specialQuestions.find((question) => question.id === triggerQuestionId)
+    assert(triggerQuestion, `${pack.id}:${triggerQuestionId} should exist in specialQuestions`)
+    const triggerValue = triggerHidden
+      ? pack.specialLogic.triggerValue
+      : triggerQuestion.options.find((option) => Number(option.value) !== Number(pack.specialLogic.triggerValue))?.value
+    plan[triggerQuestionId] = findOptionIndexByValue(triggerQuestion, triggerValue, `${pack.id}:${triggerQuestionId}`)
   }
 
   return plan
@@ -250,6 +268,23 @@ function scoreRandomScenario(pack, randomFn) {
   })
 }
 
+function createPackSeed(packId) {
+  return [...packId].reduce((seed, char, index) => seed + char.charCodeAt(0) * (index + 1), MONTE_CARLO_SEED)
+}
+
+function findFallbackScenario(pack) {
+  const randomFn = createSeededRandom(createPackSeed(pack.id))
+
+  for (let attempt = 0; attempt < 12000; attempt += 1) {
+    const result = scoreRandomScenario(pack, randomFn)
+    if (result.specialState?.reason === 'fallback') {
+      return result
+    }
+  }
+
+  throw new Error(`${pack.id}: unable to discover a fallback scenario during random search`)
+}
+
 function validateResultActionState() {
   const compactCollapsed = resolveResultActionState({
     isActive: true,
@@ -298,22 +333,22 @@ function validateInlineShareState() {
   const configured = resolveInlineShareState({
     shareConfig: {
       inlinePromptTitle: '把这张结果海报发给朋友对照一下',
-      inlinePromptBody: '一键生成海报，看看你们谁更像股神，谁又是接盘侠',
+      inlinePromptBody: '一键生成结果海报，看看你们分别更像哪一种类型',
       inlinePrimaryActionLabel: '生成结果海报',
       primaryActionLabel: '生成海报',
     },
   })
 
   assert.equal(configured.title, '把这张结果海报发给朋友对照一下', 'result: inline share title should prefer shareConfig.inlinePromptTitle')
-  assert.equal(configured.body, '一键生成海报，看看你们谁更像股神，谁又是接盘侠', 'result: inline share body should prefer shareConfig.inlinePromptBody')
+  assert.equal(configured.body, '一键生成结果海报，看看你们分别更像哪一种类型', 'result: inline share body should prefer shareConfig.inlinePromptBody')
   assert.equal(configured.primaryLabel, '生成结果海报', 'result: inline share button should prefer shareConfig.inlinePrimaryActionLabel')
   assert.equal(configured.hidden, false, 'result: inline share prompt should stay visible with configured copy')
 }
 
 function validateDetailSectionSplitting() {
   const sections = [
-    { id: 'insight', title: '人格解读' },
-    { id: 'habit', title: '交易习惯与提醒' },
+    { id: 'insight', title: '结果解读' },
+    { id: 'habit', title: '行为特征与提醒' },
     { id: 'dimensions', title: '十五维度分布' },
   ]
 
@@ -397,8 +432,9 @@ function validateFlowBehavior(pack) {
   const gateQuestionId = pack.specialLogic.gateQuestionId
   const triggerQuestionId = pack.specialLogic.triggerQuestionId
   const firstSnapshot = flow.getSnapshot()
+  const expectedBaseQuestions = pack.questions.length + (pack.flow?.staticInsertions?.length || 0)
 
-  assert.equal(firstSnapshot.totalQuestions, 31, `${pack.id}: should start with 30 regular questions + 1 static gate question`)
+  assert.equal(firstSnapshot.totalQuestions, expectedBaseQuestions, `${pack.id}: should include regular questions plus static gate insertions`)
   assert.equal(firstSnapshot.questionIds, undefined)
   assert.equal(firstSnapshot.flowState.questionIds[1], gateQuestionId, `${pack.id}: gate question should be inserted at the predictable slot`)
   assert.equal(firstSnapshot.flowState.questionIds.includes(triggerQuestionId), false, `${pack.id}: trigger question should stay hidden before gate`)
@@ -407,22 +443,36 @@ function validateFlowBehavior(pack) {
   flow.goNext()
   assert.equal(flow.getSnapshot().currentQuestion.id, gateQuestionId, `${pack.id}: expected to reach the gate question`)
 
+  const gateQuestion = pack.specialQuestions.find((question) => question.id === gateQuestionId)
+  assert(gateQuestion, `${pack.id}:${gateQuestionId} should exist in specialQuestions`)
+  const nonTriggerGateValue = gateQuestion.options.find((option) => !pack.specialLogic.gateValues?.includes(Number(option.value)))?.value
+  const triggerGateValue = pack.specialLogic.gateValues?.[0]
+  const nonTriggerGateIndex = findOptionIndexByValue(gateQuestion, nonTriggerGateValue, `${pack.id}:${gateQuestionId}`)
+  const triggerGateIndex = findOptionIndexByValue(gateQuestion, triggerGateValue, `${pack.id}:${gateQuestionId}`)
+
   flow.selectOption(0)
   let snapshot = flow.getSnapshot()
   assert.equal(snapshot.flowState.questionIds.includes(triggerQuestionId), false, `${pack.id}: trigger question should remain hidden when gate is not hit`)
 
-  flow.selectOption(2)
+  flow.selectOption(triggerGateIndex)
   snapshot = flow.getSnapshot()
   assert.equal(snapshot.flowState.questionIds.includes(triggerQuestionId), true, `${pack.id}: trigger question should appear when gate is hit`)
-  assert.equal(snapshot.totalQuestions, 32, `${pack.id}: visible question count should include the inserted trigger question`)
+  assert.equal(
+    snapshot.totalQuestions,
+    expectedBaseQuestions + 1,
+    `${pack.id}: visible question count should include the inserted trigger question`,
+  )
 
   flow.goNext()
   assert.equal(flow.getSnapshot().currentQuestion.id, triggerQuestionId, `${pack.id}: trigger question should appear immediately after gate`)
-  flow.selectOption(1)
+  const triggerQuestion = pack.specialQuestions.find((question) => question.id === triggerQuestionId)
+  assert(triggerQuestion, `${pack.id}:${triggerQuestionId} should exist in specialQuestions`)
+  const triggerIndex = findOptionIndexByValue(triggerQuestion, pack.specialLogic.triggerValue, `${pack.id}:${triggerQuestionId}`)
+  flow.selectOption(triggerIndex)
   assert(flow.getSnapshot().answers[triggerQuestionId], `${pack.id}: trigger answer should be recorded`)
 
   flow.goPrevious()
-  flow.selectOption(0)
+  flow.selectOption(nonTriggerGateIndex)
   snapshot = flow.getSnapshot()
   assert.equal(snapshot.flowState.questionIds.includes(triggerQuestionId), false, `${pack.id}: trigger question should be removed when gate is reverted`)
   assert.equal(snapshot.answers[triggerQuestionId], undefined, `${pack.id}: removed trigger question answer should be pruned`)
@@ -431,7 +481,8 @@ function validateFlowBehavior(pack) {
 async function validatePackScenario(pack) {
   validateFlowBehavior(pack)
 
-  const normalCode = pack.id === 'gbti' ? 'GURU' : 'CTRL'
+  const normalCode = pack.patterns.normalTypes[0]?.code
+  assert(normalCode, `${pack.id}: should expose at least one normal type`)
   const normalPlan = createScenarioPlan(pack, {
     levels: getPatternLevels(pack, normalCode),
     triggerGate: false,
@@ -442,31 +493,20 @@ async function validatePackScenario(pack) {
     triggerGate: true,
     triggerHidden: true,
   })
-  const fallbackPlan = createScenarioPlan(pack, {
-    levels: FALLBACK_LEVELS[pack.id],
-    triggerGate: false,
-    triggerHidden: false,
-  })
-
   const normal = scoreScenario(pack, normalPlan).result
   const hidden = scoreScenario(pack, hiddenPlan).result
-  const fallback = scoreScenario(pack, fallbackPlan).result
+  const fallback = findFallbackScenario(pack)
 
   assert.equal(normal.hero.code, normalCode, `${pack.id}: normal fixture should hit ${normalCode}`)
   assert.equal(normal.meta.confidence, 100, `${pack.id}: exact pattern match should yield 100 confidence`)
   assert.equal(normal.secondaryHero, null, `${pack.id}: normal result should not produce a secondary hero`)
 
-  if (pack.id === 'gbti') {
-    assert.equal(hidden.hero.code, 'TEN_JQKA', 'gbti: hidden fixture should hit TEN_JQKA')
-    assert.equal(fallback.hero.code, 'WATCHER', 'gbti: fallback fixture should hit WATCHER')
-  } else {
-    assert.equal(hidden.hero.code, 'DRUNK', 'sbti: hidden fixture should hit DRUNK')
-    assert.equal(fallback.hero.code, 'HHHH', 'sbti: fallback fixture should hit HHHH')
-  }
+  assert.equal(hidden.hero.code, pack.specialLogic.hiddenTypeCode, `${pack.id}: hidden fixture should hit the configured hidden type`)
+  assert.equal(fallback.hero.code, pack.specialLogic.fallbackTypeCode, `${pack.id}: fallback search should hit the configured fallback type`)
 
   assert(hidden.secondaryHero, `${pack.id}: hidden result should preserve the best normal type as secondary hero`)
   assert.equal(Boolean(fallback.secondaryHero), true, `${pack.id}: fallback result should preserve the best normal type as secondary hero`)
-  assert(hidden.meta.confidence >= 100 || hidden.hero.code === 'DRUNK' || hidden.hero.code === 'TEN_JQKA')
+  assert.equal(hidden.meta.confidence, 100, `${pack.id}: hidden result should surface 100 confidence`)
 
   ;[normal, hidden, fallback].forEach((result) => {
     assert(result.hero.image, `${pack.id}:${result.hero.code} should expose a resolved hero.image`)
@@ -478,18 +518,16 @@ async function validatePackScenario(pack) {
     )
   })
 
-  if (pack.id === 'gbti') {
-    assert.equal(
-      normal.dimensions.every((item) => typeof item.summaryLabel === 'string' && item.summaryLabel.length > 0),
-      true,
-      'gbti: dimensions should expose human-readable summary labels',
-    )
-    assert.equal(
-      normal.dimensions.every((item) => ['L', 'M', 'H'].includes(item.levelCode) && ['高', '中', '低'].includes(item.levelLabel) === false),
-      true,
-      'gbti: raw scoring levels should keep stable L/M/H codes for matcher compatibility',
-    )
-  }
+  assert.equal(
+    normal.dimensions.every((item) => typeof item.summaryLabel === 'string' && item.summaryLabel.length > 0),
+    true,
+    `${pack.id}: dimensions should expose human-readable summary labels`,
+  )
+  assert.equal(
+    normal.dimensions.every((item) => typeof item.levelCode === 'string' && item.levelCode.length > 0),
+    true,
+    `${pack.id}: raw scoring levels should keep stable level codes for matcher compatibility`,
+  )
 
   assert.equal(hidden.meta.stats[0].value, '100%', `${pack.id}: hidden result should surface 100% match in stats`)
   assert.equal(
@@ -506,14 +544,14 @@ async function main() {
   validateDetailSectionSplitting()
 
   const packs = await Promise.all(PACK_IDS.map(loadPack))
-  assert.equal(packs.length, 2, 'Expected exactly two normalized packs')
+  assert.equal(packs.length, 4, 'Expected exactly four normalized packs')
 
   for (const pack of packs) {
     await validatePackScenario(pack)
     validateMonteCarloDistribution(pack)
   }
 
-  console.log('Validation passed for gbti and sbti packs.')
+  console.log('Validation passed for gbti, sbti, abti, and mpti packs.')
 }
 
 main().catch((error) => {

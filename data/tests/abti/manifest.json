@@ -1,0 +1,139 @@
+{
+  "id": "abti",
+  "scorerId": "dimension-pattern-matcher",
+  "questionsPath": "./questions.json",
+  "outcomesPath": "./outcomes.json",
+  "specialQuestionsPath": "./special-questions.json",
+  "dimensionsPath": "./dimensions.json",
+  "patternsPath": "./patterns.json",
+  "meta": {
+    "browserTitle": "ABTI 科研人格测试",
+    "description": "30 道题、15 个维度、26 种科研人格结果的趣味测试。",
+    "version": "1.0.0"
+  },
+  "display": {
+    "introEyebrow": "ABTI · 科研人格测试",
+    "introTitle": "测测你的科研人格",
+    "subtitle": "30 道科研场景题，从 5 大模型和 15 个维度看看你最像哪一种科研人格。",
+    "statsLine": "30 道维度题 · 26 种科研人格 · 即测即出结果",
+    "estimatedDurationLabel": "预计 3-4 分钟",
+    "secondaryNote": "围绕课题、投稿、导师、合作和焦虑状态设计，结果更有代入感。",
+    "trustBadges": [
+      "免费体验",
+      "无需登录",
+      "可保存结果海报"
+    ],
+    "benefits": [
+      {
+        "title": "科研场景更真实",
+        "text": "题目围绕选题、投稿、DDL、组会和学术社交展开，不是抽象性格问答。"
+      },
+      {
+        "title": "结果更像你身边的人",
+        "text": "每种人格都有鲜明的科研画像和一句话标签，方便对照和分享。"
+      },
+      {
+        "title": "维度解释更直观",
+        "text": "除了人格类型，还能看到十五个维度的强弱分布，理解结果更完整。"
+      }
+    ],
+    "spotlightCodes": [
+      "STAR",
+      "PI-er",
+      "PAPER"
+    ],
+    "disclaimer": "本测试仅供娱乐，请勿将结果用于学术评价、毕业判断、职称评审或基金申请。",
+    "startButtonLabel": "开始测试",
+    "restartButtonLabel": "重新测试",
+    "downloadButtonLabel": "保存结果海报",
+    "loadingMessages": [
+      "正在分析你的科研行为模式",
+      "正在匹配科研人格类型",
+      "正在整理十五维度分布",
+      "你的科研人格即将揭晓"
+    ]
+  },
+  "flow": {
+    "mode": "conditional",
+    "shuffleQuestions": true,
+    "staticInsertions": [
+      {
+        "questionId": "quit_gate_q1",
+        "strategy": "random-slot",
+        "minIndex": 1
+      }
+    ]
+  },
+  "specialLogic": {
+    "gateQuestionId": "quit_gate_q1",
+    "gateValues": [
+      3
+    ],
+    "insertQuestionId": "quit_gate_q2",
+    "insertAfterQuestionId": "quit_gate_q1",
+    "triggerQuestionId": "quit_gate_q2",
+    "triggerValue": 2,
+    "hiddenTypeCode": "QUIT",
+    "fallbackTypeCode": "404",
+    "similarityFloor": 60
+  },
+  "assets": {
+    "posterMode": "image"
+  },
+  "resultTemplate": {
+    "sections": [
+      {
+        "id": "hero-art",
+        "type": "image-panel",
+        "group": "hero-top",
+        "card": true
+      },
+      {
+        "id": "hero-summary",
+        "type": "hero-summary",
+        "group": "hero-top",
+        "card": true
+      },
+      {
+        "id": "stats",
+        "type": "stats-inline",
+        "source": "meta.stats"
+      },
+      {
+        "id": "dimensions",
+        "type": "dimension-list",
+        "title": "十五维度分布",
+        "source": "dimensions"
+      }
+    ],
+    "disclaimer": {
+      "source": "pack.display.disclaimer"
+    }
+  },
+  "shareConfig": {
+    "title": "ABTI 科研人格测试",
+    "linkCopyText": "来测测你的科研人格类型",
+    "promptTitle": "这个科研人格很适合发给朋友对照一下",
+    "promptBody": "生成结果海报发给朋友，看看你们谁更像论文机器、未来 PI 或学术坦克。",
+    "inlinePromptTitle": "把这张科研人格海报发给朋友对照一下",
+    "inlinePromptBody": "一键生成结果海报，看看你们谁更像 STAR，谁又更像 SOS。",
+    "inlinePrimaryActionLabel": "生成结果海报",
+    "primaryActionLabel": "生成海报",
+    "secondaryActionLabel": "分享链接",
+    "floatingLabel": "生成海报",
+    "nudgeLabel": "生成海报，发给朋友",
+    "revealToast": "结果海报已经准备好，发给朋友一起测测看",
+    "footer": "ABTI · 科研人格测试 · 仅供娱乐",
+    "rankingTitle": "常规人格 TOP 3",
+    "rankingLimit": 3,
+    "badgeLabel": "匹配度",
+    "filenamePrefix": "ABTI",
+    "badgeText": "你的科研人格是",
+    "qrLabel": "扫码测测你的科研人格"
+  },
+  "features": {
+    "gallery": true,
+    "leaderboard": true,
+    "analytics": true
+  }
+}

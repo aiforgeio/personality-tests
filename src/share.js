@@ -7,7 +7,7 @@ import {
   getPosterComparison,
   getPosterQuote,
 } from './result-highlights.js'
-import { formatCode, stripEndingPunctuation, toLines, truncateWithEllipsis } from './utils.js'
+import { formatCode, stripEndingPunctuation, toLines, toSmartLines, truncateWithEllipsis } from './utils.js'
 
 /* ---- Canvas 工具函数 ---- */
 
@@ -107,7 +107,6 @@ const TAG_HEIGHT = 38
 const TAG_GAP = 12
 const TAG_ROW_GAP = 12
 const TAG_PADDING_X = 20
-const DIMENSION_LABEL_CHAR_LIMIT = 7
 const DIMENSION_TITLE_GAP = 48
 const DIMENSION_ROW_HEIGHT = 64
 const DIMENSION_BOTTOM_PADDING = 32
@@ -286,18 +285,25 @@ async function drawHeroPanel(ctx, hero, x, y, width, height) {
 function drawQuoteCard(ctx, lines, centerX, y) {
   if (!lines.length) return y
 
-  const height = lines.length * QUOTE_LINE_HEIGHT
+  // 始终占用两行的高度空间
+  const fixedHeight = 2 * QUOTE_LINE_HEIGHT
 
   /* 引用文字 - 居中、无边框、斜体 */
   ctx.fillStyle = PALETTE.textSecondary
   ctx.font = `italic 500 24px ${FONT}` // 放大字体
   ctx.textAlign = 'center'
 
-  lines.forEach((line, index) => {
-    ctx.fillText(line, centerX, y + 24 + index * QUOTE_LINE_HEIGHT)
-  })
+  if (lines.length === 1) {
+    // 只有一行时，垂直居中在两行空间内
+    ctx.fillText(lines[0], centerX, y + 24 + QUOTE_LINE_HEIGHT / 2)
+  } else {
+    // 两行时正常排列
+    lines.forEach((line, index) => {
+      ctx.fillText(line, centerX, y + 24 + index * QUOTE_LINE_HEIGHT)
+    })
+  }
 
-  return y + height + 24
+  return y + fixedHeight + 24
 }
 
 function buildTagRows(ctx, tags, maxWidth, { limit = 4 } = {}) {
@@ -404,23 +410,32 @@ function drawDimensionList(ctx, dimensions, x, y, width) {
   // 标题
   ctx.textAlign = 'left'
   ctx.fillStyle = PALETTE.textMuted
-  ctx.font = `600 14px ${FONT}`
+  ctx.font = `600 18px ${FONT}`
   ctx.letterSpacing = '0.1em'
   ctx.fillText('核心维度分析', x, y)
   ctx.letterSpacing = '0px'
   y += DIMENSION_TITLE_GAP
 
-  const labelWidth = 140
+  // 根据标签实际宽度动态计算 labelWidth，避免截断
+  ctx.font = `500 20px ${FONT}`
+  const labelGap = 16
+  const measuredLabelWidth = dimensions.reduce((max, item) => {
+    const w = ctx.measureText(item.label).width
+    return w > max ? w : max
+  }, 0)
+  const labelWidth = Math.max(Math.ceil(measuredLabelWidth) + labelGap, 80)
   const valueWidth = 60
   const barX = x + labelWidth
-  const barWidth = width - labelWidth - valueWidth - 20 // 20px padding
+  const barWidth = Math.max(width - labelWidth - valueWidth - 20, 40) // 20px padding, 最小40px
 
   dimensions.forEach((item) => {
     // Label
     ctx.textAlign = 'left'
     ctx.fillStyle = PALETTE.text
     ctx.font = `500 20px ${FONT}`
-    ctx.fillText(item.label, x, y + 6)
+    // Remove letters and numbers from the label
+    const cleanLabel = item.label.replace(/[a-zA-Z0-9]/g, '').trim()
+    ctx.fillText(cleanLabel, x, y + 6)
 
     // Bar Background
     const barY = y - 3
@@ -429,34 +444,21 @@ function drawDimensionList(ctx, dimensions, x, y, width) {
     ctx.fillStyle = PALETTE.barBg
     ctx.fill()
 
-    // Bar Fill
+    // Bar Fill — 始终显示进度条，最小宽度为 barH（圆角直径）
     const pct = Number(item.percentage ?? 0)
-    if (pct > 0) {
-      const fillWidth = Math.max(barH, (pct / 100) * barWidth)
-      const fillGradient = ctx.createLinearGradient(barX, barY, barX + fillWidth, barY)
-      fillGradient.addColorStop(0, PALETTE.primaryLight)
-      fillGradient.addColorStop(1, PALETTE.primary)
-      roundRect(ctx, barX, barY, fillWidth, barH, barH / 2)
-      ctx.fillStyle = fillGradient
-      ctx.fill()
-    } else {
-      // 0% 状态：极简虚线
-      ctx.save()
-      ctx.setLineDash([4, 4])
-      ctx.strokeStyle = 'rgba(46, 125, 50, 0.25)' // 恢复绿色虚线
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(barX + 2, barY + barH / 2)
-      ctx.lineTo(barX + barWidth - 2, barY + barH / 2)
-      ctx.stroke()
-      ctx.restore()
-    }
+    const fillWidth = Math.max(barH, (pct / 100) * barWidth)
+    const fillGradient = ctx.createLinearGradient(barX, barY, barX + fillWidth, barY)
+    fillGradient.addColorStop(0, PALETTE.primaryLight)
+    fillGradient.addColorStop(1, PALETTE.primary)
+    roundRect(ctx, barX, barY, fillWidth, barH, barH / 2)
+    ctx.fillStyle = fillGradient
+    ctx.fill()
 
-    // Value
+    // Value — 始终显示百分比，不再用"—"代替
     ctx.textAlign = 'right'
-    ctx.fillStyle = pct > 0 ? PALETTE.primary : PALETTE.textMuted // 恢复绿色数值
+    ctx.fillStyle = PALETTE.primary
     ctx.font = `600 20px ${FONT}`
-    ctx.fillText(pct > 0 ? `${Math.round(pct)}%` : '—', x + width, y + 6)
+    ctx.fillText(`${Math.round(pct)}%`, x + width, y + 6)
 
     y += DIMENSION_ROW_HEIGHT
   })
@@ -467,7 +469,6 @@ function drawDimensionList(ctx, dimensions, x, y, width) {
 function prepareDimensionItems(dimensions, { limit = 4 } = {}) {
   return dimensions.slice(0, limit).map((item) => ({
     ...item,
-    label: truncateWithEllipsis(item.label, DIMENSION_LABEL_CHAR_LIMIT),
   }))
 }
 
@@ -490,7 +491,7 @@ function measurePosterContent(ctx, {
   tagLimit,
   dimensionLimit,
 }) {
-  const quoteLines = quote ? clampLines(quote, QUOTE_LINE_LIMIT, quoteMaxLines) : []
+  const quoteLines = quote ? toSmartLines(quote, QUOTE_LINE_LIMIT) : []
   const tagRows = buildTagRows(ctx, tags, cardW - 80, { limit: tagLimit })
   const dimensionItems = prepareDimensionItems(dimensions, { limit: dimensionLimit })
   const titleSize = fitTextSize(ctx, title, cardW - 80, 68, 42, 900)
@@ -507,7 +508,8 @@ function measurePosterContent(ctx, {
   }
 
   if (quoteLines.length) {
-    contentBottom += quoteLines.length * QUOTE_LINE_HEIGHT + 24 + spacing.afterQuote
+    // 始终按两行高度计算，保证布局一致性
+    contentBottom += 2 * QUOTE_LINE_HEIGHT + 24 + spacing.afterQuote
   }
 
   if (tagRows.length) {
@@ -540,9 +542,9 @@ function resolvePosterLayout(ctx, {
   footerY,
 }) {
   const layout = {
-    quoteMaxLines: quote ? 3 : 0,
+    quoteMaxLines: quote ? 2 : 0, // 强制最多2行
     tagLimit: Math.min(tags.length, 4),
-    dimensionLimit: Math.min(dimensions.length, 4),
+    dimensionLimit: Math.min(dimensions.length, 6),
     spacing: DEFAULT_POSTER_SPACING,
   }
 
@@ -565,10 +567,6 @@ function resolvePosterLayout(ctx, {
 
   let measured = measure()
 
-  if (measured.contentBottom > maxContentBottom && layout.quoteMaxLines > 2) {
-    layout.quoteMaxLines = 2
-    measured = measure()
-  }
 
   if (measured.contentBottom > maxContentBottom && layout.tagLimit > 3) {
     layout.tagLimit = 3
@@ -580,8 +578,8 @@ function resolvePosterLayout(ctx, {
     measured = measure()
   }
 
-  if (measured.contentBottom > maxContentBottom && layout.dimensionLimit > 3) {
-    layout.dimensionLimit = 3
+  if (measured.contentBottom > maxContentBottom && layout.dimensionLimit > 6) {
+    layout.dimensionLimit = 6
     measured = measure()
   }
 
@@ -601,7 +599,7 @@ function resolvePosterLayout(ctx, {
 export async function generateShareImage(result, { forceDataUrl = false } = {}) {
   const { hero, share } = result
   const tags = getHighlightTags(result, 4)
-  const dimensions = getHighlightDimensions(result, 4)
+  const dimensions = getHighlightDimensions(result, 6)
   const comparison = getPosterComparison(result)
   const quote = stripEndingPunctuation(getPosterQuote(result))
 
