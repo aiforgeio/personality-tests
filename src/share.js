@@ -592,10 +592,38 @@ function resolvePosterLayout(ctx, {
   }
 }
 
+function canvasToBlob(canvas, type = 'image/png', quality = 1.0) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob)
+        return
+      }
+      reject(new Error('Failed to create poster blob'))
+    }, type, quality)
+  })
+}
+
+function downloadBlob(blob, fileName) {
+  const objectUrl = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.download = fileName
+  link.href = objectUrl
+  link.click()
+  window.setTimeout(() => {
+    URL.revokeObjectURL(objectUrl)
+  }, 1000)
+}
+
 /* ---- 主生成函数 ---- */
 
-export async function generateShareImage(result, { forceDataUrl = false } = {}) {
+export async function generateShareImage(result, {
+  output = 'download',
+  forceDataUrl = false,
+  fileName = '',
+} = {}) {
   const { hero, share } = result
+  const outputMode = forceDataUrl ? 'data-url' : output
 
   const tags = getHighlightTags(result, 4)
   const dimensions = getHighlightDimensions(result, 6)
@@ -736,16 +764,31 @@ export async function generateShareImage(result, { forceDataUrl = false } = {}) 
   ctx.font = `400 16px ${FONT}`
   ctx.fillText(footerTitle, cardX + 132, footerY + 88)
 
-  const dataUrl = canvas.toDataURL('image/png', 1.0)
+  const resolvedFileName = fileName || share.fileName || `test-result-${hero.code}.png`
 
-  if (import.meta.env.DEV || forceDataUrl) {
-    return dataUrl
+  if (outputMode === 'data-url') {
+    return {
+      dataUrl: canvas.toDataURL('image/png', 1.0),
+      fileName: resolvedFileName,
+    }
   }
 
-  const link = document.createElement('a')
-  link.download = share.fileName || `test-result-${hero.code}.png`
-  link.href = dataUrl
-  link.click()
+  const blob = await canvasToBlob(canvas)
 
-  return dataUrl
+  if (outputMode === 'blob') {
+    return {
+      blob,
+      fileName: resolvedFileName,
+    }
+  }
+
+  if (outputMode === 'download') {
+    downloadBlob(blob, resolvedFileName)
+    return {
+      blob,
+      fileName: resolvedFileName,
+    }
+  }
+
+  throw new Error(`Unsupported share image output mode: ${outputMode}`)
 }

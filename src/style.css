@@ -2139,6 +2139,109 @@ body {
   }
 }
 
+body.poster-preview-open {
+  overflow: hidden;
+}
+
+.poster-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    calc(var(--safe-top) + 16px)
+    16px
+    calc(var(--safe-bottom) + 16px);
+}
+
+.poster-preview[hidden] {
+  display: none;
+}
+
+.poster-preview-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 24, 18, 0.64);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.poster-preview-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 430px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 16px 16px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
+}
+
+.poster-preview-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.poster-preview-copy {
+  padding: 4px 24px 0;
+  text-align: center;
+}
+
+.poster-preview-kicker {
+  margin-bottom: 6px;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.poster-preview-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.poster-preview-body {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.poster-preview-image-wrap {
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 246, 0.98));
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.poster-preview-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(70dvh, 760px);
+  object-fit: contain;
+  -webkit-touch-callout: default;
+}
+
 /* ============================================================
    Toast 提示
    ============================================================ */
@@ -2344,6 +2447,27 @@ body {
 
 /* 标准手机（375px - 430px） */
 @media (max-width: 430px) {
+  .portal-shell {
+    width: min(100%, calc(100% - 24px));
+    padding:
+      calc(var(--safe-top) + 28px)
+      calc(var(--safe-right) + 2px)
+      calc(var(--safe-bottom) + 28px)
+      calc(var(--safe-left) + 2px);
+  }
+
+  .portal-subtitle {
+    width: 100%;
+    max-width: 100%;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    gap: 4px;
+  }
+
+  .portal-subtitle-line {
+    white-space: nowrap;
+  }
+
   .quiz-wrapper {
     min-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 44px);
     justify-content: center;

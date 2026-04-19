@@ -6,6 +6,8 @@ export async function loadJSON(path) {
   return res.json()
 }
 
+export const SHARE_ENTRY_URL = 'https://personalityhub.dpdns.org/'
+
 export function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max)
 }
@@ -183,4 +185,8 @@ export function resolveCanonicalTestUrl(test, { baseUrl = '', origin = '' } = {}
   }
 
   return new URL(path, `${resolvedOrigin}/`).toString()
+}
+
+export function resolveShareEntryUrl() {
+  return SHARE_ENTRY_URL
 }

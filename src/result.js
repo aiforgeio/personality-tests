@@ -476,30 +476,16 @@ export function resolveInlineShareState({
 export function resolveResultActionState({
   isActive = false,
   isCompactViewport = false,
-  isCollapsed = false,
-  isDownloadDisabled = false,
-  hasShownNudge = false,
   displayConfig = {},
   shareConfig = {},
   actionDefaults = DEFAULT_ACTION_COPY,
 } = {}) {
-  const collapsed = Boolean(isActive && isCompactViewport && isCollapsed && !isDownloadDisabled)
-  const basePrimaryLabel = collapsed
-    ? resolveActionLabel(
-      shareConfig.floatingLabel,
-      resolveActionLabel(
-        shareConfig.primaryActionLabel,
-        resolveActionLabel(displayConfig.downloadButtonLabel, actionDefaults.floatingLabel),
-      ),
-    )
-    : shareConfig.primaryActionLabel != null
-      ? resolveActionLabel(shareConfig.primaryActionLabel, actionDefaults.primaryActionLabel)
-      : !isCompactViewport && displayConfig.downloadButtonLabel != null
-        ? resolveActionLabel(displayConfig.downloadButtonLabel, actionDefaults.primaryActionLabel)
-        : actionDefaults.primaryActionLabel
-  const primaryLabel = collapsed && hasShownNudge
-    ? resolveActionLabel(shareConfig.nudgeLabel, DEFAULT_INLINE_SHARE_COPY.nudgeLabel)
-    : basePrimaryLabel
+  const collapsed = false
+  const primaryLabel = shareConfig.primaryActionLabel != null
+    ? resolveActionLabel(shareConfig.primaryActionLabel, actionDefaults.primaryActionLabel)
+    : displayConfig.downloadButtonLabel != null
+      ? resolveActionLabel(displayConfig.downloadButtonLabel, actionDefaults.primaryActionLabel)
+      : actionDefaults.primaryActionLabel
   const secondaryLabel = shareConfig.secondaryActionLabel != null
     ? resolveActionLabel(shareConfig.secondaryActionLabel, actionDefaults.secondaryActionLabel)
     : isCompactViewport
@@ -514,7 +500,7 @@ export function resolveResultActionState({
     primaryAriaLabel: primaryLabel,
     secondaryLabel,
     restartLabel,
-    nudgeActive: collapsed && hasShownNudge,
+    nudgeActive: false,
   }
 }
 
@@ -522,17 +508,11 @@ export function resolveResultActionState({
 
 export function createResultView({ onRestart, onDownload }) {
   const actionDefaults = DEFAULT_ACTION_COPY
-  const collapseScrollThreshold = 320
-  const collapseCardExitOffset = 88
 
   let currentResult = null
   let displayConfig = {}
   let shareConfig = {}
   let isActive = false
-  let isCollapsed = false
-  let hasShareInteraction = false
-  let hasShownShareNudge = false
-  let scrollListenerAttached = false
 
   const els = {
     actions: document.getElementById('result-actions'),
@@ -611,9 +591,6 @@ export function createResultView({ onRestart, onDownload }) {
     const actionState = resolveResultActionState({
       isActive,
       isCompactViewport: isCompactViewport(),
-      isCollapsed,
-      isDownloadDisabled: Boolean(els.download?.disabled),
-      hasShownNudge: hasShownShareNudge && !hasShareInteraction,
       displayConfig,
       shareConfig,
       actionDefaults,
@@ -651,97 +628,8 @@ export function createResultView({ onRestart, onDownload }) {
     }
   }
 
-  function setCollapsed(nextCollapsed) {
-    const normalized = Boolean(nextCollapsed)
-      && isActive
-      && isCompactViewport()
-      && !els.download?.disabled
-
-    if (normalized === isCollapsed) return
-    isCollapsed = normalized
-    applyActionState()
-  }
-
-  function markShareInteraction() {
-    if (hasShareInteraction) return
-    hasShareInteraction = true
-    applyActionState()
-  }
-
-  function getReachedPrioritySectionCount() {
-    const sections = els.detailSections
-      ? Array.from(els.detailSections.querySelectorAll('.result-section.is-priority'))
-      : []
-
-    if (sections.length === 0) return 0
-
-    const viewportThreshold = window.innerHeight * 0.72
-    return sections.reduce((count, section) => {
-      const rect = section.getBoundingClientRect()
-      return rect.top <= viewportThreshold ? count + 1 : count
-    }, 0)
-  }
-
-  function maybeActivateShareNudge() {
-    if (
-      hasShareInteraction
-      || hasShownShareNudge
-      || !isActive
-      || !isCompactViewport()
-      || !els.detailSections
-    ) {
-      return
-    }
-
-    const sections = els.detailSections.querySelectorAll('.result-section.is-priority')
-    if (!sections.length) return
-
-    const thresholdCount = Math.min(2, sections.length)
-    if (getReachedPrioritySectionCount() >= thresholdCount) {
-      hasShownShareNudge = true
-      applyActionState()
-    }
-  }
-
-  function syncActionState({ force = false } = {}) {
-    maybeActivateShareNudge()
-
-    if (!isActive || !isCompactViewport() || els.download?.disabled) {
-      if (force || isCollapsed) {
-        isCollapsed = false
-        applyActionState()
-      }
-      return
-    }
-
-    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0
-    const shareCardBottom = els.shareCard?.getBoundingClientRect().bottom ?? Number.POSITIVE_INFINITY
-    const shouldCollapse = scrollTop > collapseScrollThreshold || shareCardBottom <= collapseCardExitOffset
-
-    if (force || shouldCollapse !== isCollapsed) {
-      isCollapsed = shouldCollapse
-      applyActionState()
-    }
-  }
-
   function handleViewportChange() {
-    syncActionState({ force: true })
-  }
-
-  function handleActionScroll() {
-    syncActionState()
-  }
-
-  function ensureScrollListener() {
-    if (scrollListenerAttached) return
-    window.addEventListener('scroll', handleActionScroll, { passive: true })
-    scrollListenerAttached = true
-  }
-
-  function removeScrollListener() {
-    if (!scrollListenerAttached) return
-    window.removeEventListener('scroll', handleActionScroll)
-    scrollListenerAttached = false
+    applyActionState()
   }
 
   function updateActionLabels() {
@@ -753,10 +641,6 @@ export function createResultView({ onRestart, onDownload }) {
   if (els.download) {
     els.download.addEventListener('click', () => {
       if (!currentResult) return
-      markShareInteraction()
-      if (isActive && isCompactViewport() && isCollapsed) {
-        setCollapsed(false)
-      }
       onDownload(els.download)
     })
   }
@@ -764,14 +648,7 @@ export function createResultView({ onRestart, onDownload }) {
   if (els.inlineDownload) {
     els.inlineDownload.addEventListener('click', () => {
       if (!currentResult) return
-      markShareInteraction()
       onDownload(els.inlineDownload)
-    })
-  }
-
-  if (els.share) {
-    els.share.addEventListener('click', () => {
-      markShareInteraction()
     })
   }
 
@@ -791,8 +668,6 @@ export function createResultView({ onRestart, onDownload }) {
 
   function render(result) {
     currentResult = result
-    hasShareInteraction = false
-    hasShownShareNudge = false
 
     renderShareCard(result, els, { shareConfig, displayConfig })
 
@@ -800,33 +675,12 @@ export function createResultView({ onRestart, onDownload }) {
       renderDetailSections(els.detailSections, result)
     }
 
-    isCollapsed = false
     updateActionLabels()
-
-    if (isActive) {
-      window.requestAnimationFrame(() => {
-        syncActionState({ force: true })
-      })
-    }
   }
 
   function setActive(nextActive) {
     isActive = Boolean(nextActive)
-
-    if (!isActive) {
-      removeScrollListener()
-      isCollapsed = false
-      applyActionState()
-      return
-    }
-
-    isCollapsed = false
     applyActionState()
-    ensureScrollListener()
-
-    window.requestAnimationFrame(() => {
-      syncActionState({ force: true })
-    })
   }
 
   return { configure, render, setActive }

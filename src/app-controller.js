@@ -4,7 +4,7 @@ import { createNoopResultReporter } from './reporters/index.js'
 import { createResultView } from './result.js'
 import { createScorerRegistry } from './scorers/index.js'
 import { createLocalTestPackSource } from './test-pack/source.js'
-import { compactCardText, resolveCanonicalTestUrl, stripEndingPunctuation } from './utils.js'
+import { compactCardText, resolveShareEntryUrl, stripEndingPunctuation } from './utils.js'
 
 /* ---- 工具函数 ---- */
 
@@ -45,8 +45,51 @@ function buildLinkShareText(pack, url) {
 
 function resolveResultShareUrl({ result = null, pack = null, manifest = null } = {}) {
   return result?.share?.url
-    || resolveCanonicalTestUrl(pack || manifest || {})
+    || resolveShareEntryUrl()
     || (typeof window !== 'undefined' ? window.location.href.split('?')[0] : '')
+}
+
+function isCompactMobileViewport() {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 430px)').matches
+}
+
+function ensurePosterPreviewShell() {
+  let root = document.getElementById('poster-preview')
+
+  if (!root) {
+    root = document.createElement('div')
+    root.id = 'poster-preview'
+    root.className = 'poster-preview'
+    root.hidden = true
+    root.innerHTML = `
+      <div class="poster-preview-backdrop" data-close-preview="true"></div>
+      <div class="poster-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="poster-preview-title">
+        <button
+          type="button"
+          class="poster-preview-close"
+          id="poster-preview-close"
+          aria-label="关闭海报预览"
+          data-close-preview="true"
+        >
+          ×
+        </button>
+        <div class="poster-preview-copy">
+          <div class="poster-preview-kicker">海报已生成</div>
+          <h2 class="poster-preview-title" id="poster-preview-title">长按图片保存到相册</h2>
+          <p class="poster-preview-body">如果没有自动保存，请长按下方海报图片后选择保存。</p>
+        </div>
+        <div class="poster-preview-image-wrap">
+          <img class="poster-preview-image" id="poster-preview-image" alt="结果海报预览" />
+        </div>
+      </div>
+    `
+    document.body.appendChild(root)
+  }
+
+  return {
+    root,
+    image: root.querySelector('#poster-preview-image'),
+  }
 }
 
 function clearContainer(element) {
@@ -330,6 +373,7 @@ export function createAppController({
   let activePackPromise = null
   let latestResult = null
   let stopLoadingFn = null
+  let posterPreviewUrl = ''
 
   const quizView = createQuizView({
     onComplete: handleQuizComplete,
@@ -340,24 +384,71 @@ export function createAppController({
     onDownload: handleDownload,
   })
 
+  const posterPreviewEls = ensurePosterPreviewShell()
+
+  function revokePosterPreviewUrl() {
+    if (!posterPreviewUrl) return
+    URL.revokeObjectURL(posterPreviewUrl)
+    posterPreviewUrl = ''
+  }
+
+  function closePosterPreview() {
+    if (!posterPreviewEls.root || posterPreviewEls.root.hidden) return
+
+    posterPreviewEls.root.hidden = true
+    document.body.classList.remove('poster-preview-open')
+    revokePosterPreviewUrl()
+
+    if (posterPreviewEls.image) {
+      posterPreviewEls.image.removeAttribute('src')
+    }
+  }
+
+  function showPosterPreview(blob) {
+    if (!posterPreviewEls.root || !posterPreviewEls.image) return
+
+    closePosterPreview()
+    posterPreviewUrl = URL.createObjectURL(blob)
+    posterPreviewEls.image.src = posterPreviewUrl
+    posterPreviewEls.root.hidden = false
+    document.body.classList.add('poster-preview-open')
+  }
+
+  function handlePosterPreviewClick(event) {
+    const closeTrigger = event.target.closest('[data-close-preview="true"]')
+    if (!closeTrigger) return
+    closePosterPreview()
+  }
+
+  function handlePosterPreviewKeydown(event) {
+    if (event.key === 'Escape') {
+      closePosterPreview()
+    }
+  }
+
   /* ---- 页面切换 ---- */
 
-  function showPage(name) {
+  function showPage(name, { instant = false } = {}) {
     if (name !== 'result') {
       resultView.setActive(false)
+      closePosterPreview()
     }
-
-    Object.values(pages).forEach((page) => {
-      if (!page) return
-      page.classList.remove('active')
-    })
 
     const target = pages[name]
     if (!target) return
 
-    target.classList.add('active')
+    const isAlreadyActive = target.classList.contains('active')
+
+    if (!isAlreadyActive) {
+      Object.values(pages).forEach((page) => {
+        if (!page) return
+        page.classList.remove('active')
+      })
+
+      target.classList.add('active')
+    }
     document.body.dataset.page = name
-    window.scrollTo({ top: 0, behavior: name === 'result' ? 'auto' : 'smooth' })
+    window.scrollTo({ top: 0, behavior: instant || name === 'result' ? 'auto' : 'smooth' })
 
     if (name === 'result') {
       resultView.setActive(true)
@@ -571,51 +662,12 @@ function setStartButtonState({ disabled, label }) {
 
     try {
       const { generateShareImage } = await import('./share.js')
-      const dataUrl = await generateShareImage(latestResult)
-      
-      // 在开发模式下，直接在页面上展示生成的截图
-      if (import.meta.env.DEV) {
-        let previewContainer = document.getElementById('dev-preview-container')
-        if (!previewContainer) {
-          previewContainer = document.createElement('div')
-          previewContainer.id = 'dev-preview-container'
-          previewContainer.style.cssText = `
-            margin-top: 20px;
-            padding: 20px;
-            background: #f5f5f5;
-            border-radius: 12px;
-            text-align: center;
-          `
-          const title = document.createElement('h3')
-          title.textContent = '【Dev 模式】分享截图预览'
-          title.style.marginBottom = '10px'
-          title.style.color = '#333'
-          previewContainer.appendChild(title)
-          
-          const img = document.createElement('img')
-          img.id = 'dev-preview-image'
-          img.style.maxWidth = '100%'
-          img.style.borderRadius = '8px'
-          img.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
-          previewContainer.appendChild(img)
-          
-          const resultWrapper = document.querySelector('.result-wrapper')
-          if (resultWrapper) {
-            resultWrapper.appendChild(previewContainer)
-          }
-        }
-        
-        const img = document.getElementById('dev-preview-image')
-        if (img) {
-          img.src = dataUrl
-          // 滚动到底部以便查看
-          setTimeout(() => {
-            previewContainer.scrollIntoView({ behavior: 'smooth' })
-          }, 100)
-        }
-        showToast('截图已生成（Dev 预览模式）')
+      if (isCompactMobileViewport()) {
+        const { blob } = await generateShareImage(latestResult, { output: 'blob' })
+        showPosterPreview(blob)
       } else {
-        showToast('结果海报已生成，快去分享吧')
+        await generateShareImage(latestResult, { output: 'download' })
+        showToast('结果海报已保存，快去分享吧')
       }
     } catch (error) {
       console.error('Download error:', error)
@@ -628,6 +680,7 @@ function setStartButtonState({ disabled, label }) {
 
   function handleRestart() {
     if (!activePack) return
+    closePosterPreview()
     quizView.start(activePack)
     showPage('quiz')
   }
@@ -753,6 +806,11 @@ function setStartButtonState({ disabled, label }) {
       els.startButton.addEventListener('click', handleStart)
     }
 
+    if (posterPreviewEls.root) {
+      posterPreviewEls.root.addEventListener('click', handlePosterPreviewClick)
+    }
+    window.addEventListener('keydown', handlePosterPreviewKeydown)
+
     setStartButtonState({ disabled: true, label: '加载中...' })
 
     // 设置分享按钮
@@ -780,9 +838,9 @@ function setStartButtonState({ disabled, label }) {
         if (autoStart) {
           const pack = await ensurePackLoaded()
           quizView.start(pack)
-          showPage('quiz')
+          showPage('quiz', { instant: true })
         } else {
-          showPage('intro')
+          showPage('intro', { instant: true })
         }
       }
     } catch (error) {

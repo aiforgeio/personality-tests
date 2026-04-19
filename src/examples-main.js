@@ -318,8 +318,8 @@ function createHero(selectedPackId = '') {
   const selectedPack = selectedPackId ? EXAMPLE_PACKS.find(({ id }) => id === selectedPackId) : null
   const title = selectedPack ? `${selectedPack.id.toUpperCase()} 结果图样张` : '多测试结果图样张画廊'
   const subtitle = selectedPack
-    ? `这里直接复用真实的分享图生成器，只渲染 ${selectedPack.id.toUpperCase()} 的结果样张。每次重生成都会带一点随机抖动，方便我们快速看版式稳定性。`
-    : '这里直接复用真实的分享图生成器，按 pack 批量渲染样张。每张图都会带一点随机抖动，方便我们更快看出不同测试在真实内容下的版式和稳定性。'
+    ? `这里直接复用真实的分享图生成器，只渲染 ${selectedPack.id.toUpperCase()} 的结果样张。每次重生成都会带一点随机抖动，二维码和分享链接统一指向 https://personalityhub.dpdns.org/，方便我们直接挑图发小红书。`
+    : '这里直接复用真实的分享图生成器，按 pack 批量渲染样张。每张图都会带一点随机抖动，二维码和分享链接统一指向 https://personalityhub.dpdns.org/，方便我们更快挑出适合发小红书的版本。'
   const navigation = selectedPack
     ? `<a class="examples-btn examples-btn-secondary" href="/examples/">查看全部测试</a>
        <a class="examples-btn examples-btn-secondary" href="/">返回主测试</a>`
@@ -328,11 +328,13 @@ function createHero(selectedPackId = '') {
     ? `
       <span class="examples-chip">当前测试：${selectedPack.id.toUpperCase()}</span>
       <span class="examples-chip">渲染对象：真实分享图 PNG</span>
+      <span class="examples-chip">分享落地页：https://personalityhub.dpdns.org/</span>
       <span class="examples-chip" id="generated-at">最近生成：${generatedAt}</span>
     `
     : `
       <span class="examples-chip">启动模式：Vite dev / examples</span>
       <span class="examples-chip">渲染对象：真实分享图 PNG</span>
+      <span class="examples-chip">分享落地页：https://personalityhub.dpdns.org/</span>
       <span class="examples-chip" id="generated-at">最近生成：${generatedAt}</span>
     `
 
@@ -368,6 +370,22 @@ function updateGeneratedAt() {
     timeStyle: 'short',
   }).format(new Date())
   target.textContent = `最近生成：${text}`
+}
+
+function buildExampleFileName(pack, result, scenario) {
+  const normalizedScenario = String(scenario || 'normal')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  return `${pack.id}-${result.hero.code}-${normalizedScenario || 'normal'}-example.png`
+}
+
+function downloadDataUrl(dataUrl, fileName) {
+  const link = document.createElement('a')
+  link.href = dataUrl
+  link.download = fileName
+  link.click()
 }
 
 function createPackSection(pack) {
@@ -407,14 +425,19 @@ function createExampleCard(pack, scenario, seedBase, index) {
     </div>
     <div class="example-footer">
       <div class="example-meta"></div>
-      <button class="examples-btn examples-btn-secondary" type="button">重随机这张</button>
+      <div class="example-actions">
+        <button class="examples-btn examples-btn-secondary" type="button" data-action="reroll">重随机这张</button>
+        <button class="examples-btn examples-btn-primary" type="button" data-action="download">下载样张</button>
+      </div>
     </div>
   `
 
   const stateEl = card.querySelector('.example-state')
   const previewEl = card.querySelector('.example-preview')
   const metaEl = card.querySelector('.example-meta')
-  const rerollButton = card.querySelector('button')
+  const rerollButton = card.querySelector('[data-action="reroll"]')
+  const downloadButton = card.querySelector('[data-action="download"]')
+  let latestPreview = null
   let counter = 0
 
   async function render() {
@@ -423,14 +446,19 @@ function createExampleCard(pack, scenario, seedBase, index) {
     stateEl.textContent = 'rendering'
     previewEl.innerHTML = '<div class="example-loading">正在生成真实分享图，请稍等...</div>'
     rerollButton.disabled = true
+    downloadButton.disabled = true
 
     try {
       const result = createMockResult(pack, scenario, seed)
-      const dataUrl = await generateShareImage(result, { forceDataUrl: true })
+      const { dataUrl } = await generateShareImage(result, { output: 'data-url' })
       const img = document.createElement('img')
       img.src = dataUrl
       img.alt = `${pack.id}-${scenario}-${result.hero.code}`
       previewEl.replaceChildren(img)
+      latestPreview = {
+        dataUrl,
+        fileName: buildExampleFileName(pack, result, scenario),
+      }
 
       const confidence = result.meta?.confidence ?? 0
       const leadLevel = result.dimensions?.[0]?.levelCode || '-'
@@ -442,15 +470,22 @@ function createExampleCard(pack, scenario, seedBase, index) {
       `
       stateEl.textContent = result.specialState?.reason || 'normal'
     } catch (error) {
+      latestPreview = null
       previewEl.innerHTML = `<div class="example-loading">生成失败：${error.message}</div>`
       stateEl.textContent = 'error'
     } finally {
       rerollButton.disabled = false
+      downloadButton.disabled = !latestPreview
     }
   }
 
   rerollButton.addEventListener('click', () => {
     void render()
+  })
+
+  downloadButton.addEventListener('click', () => {
+    if (!latestPreview) return
+    downloadDataUrl(latestPreview.dataUrl, latestPreview.fileName)
   })
 
   return { card, render }

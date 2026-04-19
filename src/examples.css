@@ -271,6 +271,12 @@ body {
   flex-wrap: wrap;
 }
 
+.example-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .example-meta {
   display: flex;
   gap: 8px;
@@ -308,5 +314,15 @@ body {
 
   .example-preview {
     min-height: 440px;
+  }
+
+  .example-actions {
+    width: 100%;
+  }
+
+  .example-actions .examples-btn {
+    flex: 1 1 0;
+    justify-content: center;
+    text-align: center;
   }
 }

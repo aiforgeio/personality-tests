@@ -1,4 +1,4 @@
-import { getByPath, resolveCanonicalTestUrl, stripEndingPunctuation } from '../utils.js'
+import { getByPath, resolveShareEntryUrl, stripEndingPunctuation } from '../utils.js'
 
 function toTitle(value) {
   const naturalTitle = value.alias ?? value.name ?? value.title
@@ -272,7 +272,7 @@ export function buildShareModel({ pack, hero, ranking, meta, secondaryHero }) {
     rankingLimit,
     rankingItems: ranking.slice(0, rankingLimit),
     headerBadgeText: resolveHeaderBadgeText(pack),
-    url: resolveCanonicalTestUrl(pack),
+    url: resolveShareEntryUrl(),
     heroImage: hero.image ?? '',
     heroArt: hero.art ?? null,
     secondaryTitle: secondaryHero?.title ?? '',

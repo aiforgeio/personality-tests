@@ -2,7 +2,7 @@ import { createAppController } from './app-controller.js'
 import './style.css'
 
 const TEST_SHELL_HTML = `
-  <section id="page-intro" class="page active" aria-label="欢迎页">
+  <section id="page-intro" class="page" aria-label="欢迎页">
     <div class="bg-orbs" aria-hidden="true">
       <div class="bg-orb bg-orb-1"></div>
       <div class="bg-orb bg-orb-2"></div>
@@ -186,12 +186,26 @@ function ensureTestShell(appRoot) {
   appRoot.innerHTML = TEST_SHELL_HTML
 }
 
+function setInitialPageState(initialPage = 'intro') {
+  const pages = document.querySelectorAll('#app .page')
+  pages.forEach((page) => page.classList.remove('active'))
+
+  const target = document.getElementById(`page-${initialPage}`)
+  if (target) {
+    target.classList.add('active')
+  }
+
+  document.body.dataset.page = initialPage
+}
+
 const appRoot = document.getElementById('app')
 const manifestPath = appRoot?.dataset?.manifestPath || ''
 const autoStart = appRoot?.dataset?.autoStart === 'true'
+const initialPage = autoStart ? 'quiz' : 'intro'
 
 if (manifestPath) {
   ensureTestShell(appRoot)
+  setInitialPageState(initialPage)
 }
 
 const app = createAppController({ manifestPath, autoStart })

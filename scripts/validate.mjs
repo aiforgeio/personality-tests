@@ -286,7 +286,7 @@ function findFallbackScenario(pack) {
 }
 
 function validateResultActionState() {
-  const compactCollapsed = resolveResultActionState({
+  const compactExpanded = resolveResultActionState({
     isActive: true,
     isCompactViewport: true,
     isCollapsed: true,
@@ -304,11 +304,11 @@ function validateResultActionState() {
     },
   })
 
-  assert.equal(compactCollapsed.collapsed, true, 'result: compact collapsed state should remain collapsed')
-  assert.equal(compactCollapsed.primaryIntent, 'download', 'result: compact collapsed primary action should download directly')
-  assert.equal(compactCollapsed.primaryLabel, '生成海报，发给朋友', 'result: compact collapsed primary label should use the nudge label once it is active')
-  assert.equal(compactCollapsed.primaryAriaLabel, '生成海报，发给朋友', 'result: compact collapsed aria label should stay direct even during nudges')
-  assert.equal(compactCollapsed.nudgeActive, true, 'result: compact collapsed action state should flag nudge mode when active')
+  assert.equal(compactExpanded.collapsed, false, 'result: compact action state should stay expanded')
+  assert.equal(compactExpanded.primaryIntent, 'download', 'result: compact primary action should download directly')
+  assert.equal(compactExpanded.primaryLabel, '生成海报', 'result: compact primary label should prefer shareConfig.primaryActionLabel')
+  assert.equal(compactExpanded.primaryAriaLabel, '生成海报', 'result: compact primary aria label should stay aligned with the visible label')
+  assert.equal(compactExpanded.nudgeActive, false, 'result: compact action state should no longer enter nudge mode')
 
   const desktopExpanded = resolveResultActionState({
     isActive: true,
