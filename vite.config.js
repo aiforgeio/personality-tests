@@ -30,6 +30,7 @@ export default defineConfig(() => ({
         sbti: path.resolve(__dirname, 'sbti/index.html'),
         abti: path.resolve(__dirname, 'abti/index.html'),
         mpti: path.resolve(__dirname, 'mpti/index.html'),
+        poster: path.resolve(__dirname, 'poster/index.html'),
         examples: path.resolve(__dirname, 'examples/index.html'),
         examplesGbti: path.resolve(__dirname, 'examples/gbti/index.html'),
         examplesSbti: path.resolve(__dirname, 'examples/sbti/index.html'),

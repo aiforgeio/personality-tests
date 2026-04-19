@@ -1,5 +1,6 @@
 import { createQuizView } from './quiz.js'
 import { preloadImageWithTimeout, preloadImages } from './image-cache.js'
+import { createPosterSession, resolvePosterPageUrl } from './poster-storage.js'
 import { createNoopResultReporter } from './reporters/index.js'
 import { createResultView } from './result.js'
 import { createScorerRegistry } from './scorers/index.js'
@@ -49,47 +50,16 @@ function resolveResultShareUrl({ result = null, pack = null, manifest = null } =
     || (typeof window !== 'undefined' ? window.location.href.split('?')[0] : '')
 }
 
-function isCompactMobileViewport() {
-  return typeof window !== 'undefined' && window.matchMedia('(max-width: 430px)').matches
-}
+function shouldUsePosterSavePage() {
+  if (typeof window === 'undefined') return false
 
-function ensurePosterPreviewShell() {
-  let root = document.getElementById('poster-preview')
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches
+  const mobileViewport = window.matchMedia('(max-width: 820px)').matches
+  const mobileAgent = /Android|webOS|iPhone|iPad|iPod|Mobile|HarmonyOS/i.test(
+    window.navigator?.userAgent || '',
+  )
 
-  if (!root) {
-    root = document.createElement('div')
-    root.id = 'poster-preview'
-    root.className = 'poster-preview'
-    root.hidden = true
-    root.innerHTML = `
-      <div class="poster-preview-backdrop" data-close-preview="true"></div>
-      <div class="poster-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="poster-preview-title">
-        <button
-          type="button"
-          class="poster-preview-close"
-          id="poster-preview-close"
-          aria-label="关闭海报预览"
-          data-close-preview="true"
-        >
-          ×
-        </button>
-        <div class="poster-preview-copy">
-          <div class="poster-preview-kicker">海报已生成</div>
-          <h2 class="poster-preview-title" id="poster-preview-title">长按图片保存到相册</h2>
-          <p class="poster-preview-body">如果没有自动保存，请长按下方海报图片后选择保存。</p>
-        </div>
-        <div class="poster-preview-image-wrap">
-          <img class="poster-preview-image" id="poster-preview-image" alt="结果海报预览" />
-        </div>
-      </div>
-    `
-    document.body.appendChild(root)
-  }
-
-  return {
-    root,
-    image: root.querySelector('#poster-preview-image'),
-  }
+  return mobileAgent || (coarsePointer && mobileViewport)
 }
 
 function clearContainer(element) {
@@ -174,6 +144,7 @@ const DEFAULT_LOADING_MESSAGES = [
   '正在计算维度分布',
   '即将揭晓你的专属结果',
 ]
+const POSTER_RETURN_STATE_MAX_AGE = 30 * 60 * 1000
 
 let loadingTimer = null
 let loadingMessageTimer = null
@@ -373,7 +344,6 @@ export function createAppController({
   let activePackPromise = null
   let latestResult = null
   let stopLoadingFn = null
-  let posterPreviewUrl = ''
 
   const quizView = createQuizView({
     onComplete: handleQuizComplete,
@@ -384,45 +354,90 @@ export function createAppController({
     onDownload: handleDownload,
   })
 
-  const posterPreviewEls = ensurePosterPreviewShell()
+  function clearPosterReturnState() {
+    if (typeof window === 'undefined' || typeof window.history?.replaceState !== 'function') return
 
-  function revokePosterPreviewUrl() {
-    if (!posterPreviewUrl) return
-    URL.revokeObjectURL(posterPreviewUrl)
-    posterPreviewUrl = ''
+    const currentState = window.history.state
+    if (!currentState || typeof currentState !== 'object' || !currentState.posterReturnState) return
+
+    const nextState = { ...currentState }
+    delete nextState.posterReturnState
+
+    window.history.replaceState(
+      Object.keys(nextState).length > 0 ? nextState : null,
+      '',
+      window.location.href,
+    )
   }
 
-  function closePosterPreview() {
-    if (!posterPreviewEls.root || posterPreviewEls.root.hidden) return
-
-    posterPreviewEls.root.hidden = true
-    document.body.classList.remove('poster-preview-open')
-    revokePosterPreviewUrl()
-
-    if (posterPreviewEls.image) {
-      posterPreviewEls.image.removeAttribute('src')
+  function persistPosterReturnState() {
+    if (
+      !latestResult
+      || typeof window === 'undefined'
+      || typeof window.history?.replaceState !== 'function'
+    ) {
+      return
     }
+
+    const currentState = window.history.state && typeof window.history.state === 'object'
+      ? window.history.state
+      : {}
+
+    window.history.replaceState(
+      {
+        ...currentState,
+        posterReturnState: {
+          manifestPath,
+          result: latestResult,
+          savedAt: Date.now(),
+        },
+      },
+      '',
+      window.location.href,
+    )
   }
 
-  function showPosterPreview(blob) {
-    if (!posterPreviewEls.root || !posterPreviewEls.image) return
+  function readPosterReturnState() {
+    const savedState = window.history.state?.posterReturnState
+    if (!savedState || typeof savedState !== 'object') return null
 
-    closePosterPreview()
-    posterPreviewUrl = URL.createObjectURL(blob)
-    posterPreviewEls.image.src = posterPreviewUrl
-    posterPreviewEls.root.hidden = false
-    document.body.classList.add('poster-preview-open')
+    if (!savedState.result || typeof savedState.result !== 'object') {
+      clearPosterReturnState()
+      return null
+    }
+
+    if ((savedState.manifestPath || '') !== manifestPath) {
+      return null
+    }
+
+    const savedAt = Number(savedState.savedAt || 0)
+    if (savedAt > 0 && Date.now() - savedAt > POSTER_RETURN_STATE_MAX_AGE) {
+      clearPosterReturnState()
+      return null
+    }
+
+    return savedState
   }
 
-  function handlePosterPreviewClick(event) {
-    const closeTrigger = event.target.closest('[data-close-preview="true"]')
-    if (!closeTrigger) return
-    closePosterPreview()
-  }
+  async function restoreResultFromHistory() {
+    const savedState = readPosterReturnState()
+    if (!savedState) return false
 
-  function handlePosterPreviewKeydown(event) {
-    if (event.key === 'Escape') {
-      closePosterPreview()
+    try {
+      const pack = await ensurePackLoaded()
+      latestResult = savedState.result
+      resultView.configure({
+        display: pack.display || {},
+        share: pack.shareConfig || {},
+      })
+      resultView.render(latestResult, pack)
+      showPage('result', { instant: true })
+      await renderPageQR()
+      return true
+    } catch (error) {
+      console.warn('Failed to restore result page state:', error)
+      clearPosterReturnState()
+      return false
     }
   }
 
@@ -431,7 +446,6 @@ export function createAppController({
   function showPage(name, { instant = false } = {}) {
     if (name !== 'result') {
       resultView.setActive(false)
-      closePosterPreview()
     }
 
     const target = pages[name]
@@ -584,6 +598,7 @@ function setStartButtonState({ disabled, label }) {
     const idleLabel = activeManifest?.display?.startButtonLabel || '开始测试'
     let failed = false
 
+    clearPosterReturnState()
     setStartButtonState({ disabled: true, label: '加载中...' })
 
     try {
@@ -662,16 +677,24 @@ function setStartButtonState({ disabled, label }) {
 
     try {
       const { generateShareImage } = await import('./share.js')
-      if (isCompactMobileViewport()) {
-        const { blob } = await generateShareImage(latestResult, { output: 'blob' })
-        showPosterPreview(blob)
+      if (shouldUsePosterSavePage()) {
+        const { dataUrl, fileName } = await generateShareImage(latestResult, { output: 'data-url' })
+        persistPosterReturnState()
+        const token = createPosterSession({
+          dataUrl,
+          fileName,
+          returnUrl: window.location.href,
+          title: activeManifest?.meta?.browserTitle || '人格测试',
+        })
+        window.location.assign(resolvePosterPageUrl(token))
+        return
       } else {
         await generateShareImage(latestResult, { output: 'download' })
         showToast('结果海报已保存，快去分享吧')
       }
     } catch (error) {
       console.error('Download error:', error)
-      showToast('结果海报生成失败，请截图保存')
+      showToast('海报打开失败，请稍后重试')
     } finally {
       button.disabled = false
       textEl.textContent = originalText || defaultLabel
@@ -680,7 +703,7 @@ function setStartButtonState({ disabled, label }) {
 
   function handleRestart() {
     if (!activePack) return
-    closePosterPreview()
+    clearPosterReturnState()
     quizView.start(activePack)
     showPage('quiz')
   }
@@ -806,11 +829,6 @@ function setStartButtonState({ disabled, label }) {
       els.startButton.addEventListener('click', handleStart)
     }
 
-    if (posterPreviewEls.root) {
-      posterPreviewEls.root.addEventListener('click', handlePosterPreviewClick)
-    }
-    window.addEventListener('keydown', handlePosterPreviewKeydown)
-
     setStartButtonState({ disabled: true, label: '加载中...' })
 
     // 设置分享按钮
@@ -835,12 +853,15 @@ function setStartButtonState({ disabled, label }) {
       // 检查是否需要进入开发模式
       const isDevHandled = await checkDevMode()
       if (!isDevHandled) {
-        if (autoStart) {
-          const pack = await ensurePackLoaded()
-          quizView.start(pack)
-          showPage('quiz', { instant: true })
-        } else {
-          showPage('intro', { instant: true })
+        const isHistoryRestored = await restoreResultFromHistory()
+        if (!isHistoryRestored) {
+          if (autoStart) {
+            const pack = await ensurePackLoaded()
+            quizView.start(pack)
+            showPage('quiz', { instant: true })
+          } else {
+            showPage('intro', { instant: true })
+          }
         }
       }
     } catch (error) {

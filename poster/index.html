@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>保存结果海报</title>
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="theme-color" content="#f5f8f5" />
+  <link rel="stylesheet" href="/src/poster.css" />
+</head>
+<body>
+  <main class="poster-save-page">
+    <div class="poster-save-shell">
+      <a class="poster-save-back" id="poster-save-back" href="/">返回结果页</a>
+
+      <section class="poster-save-panel poster-save-copy" aria-live="polite">
+        <div class="poster-save-kicker" id="poster-save-kicker">海报已生成</div>
+        <h1 class="poster-save-title" id="poster-save-title">长按图片保存到相册</h1>
+        <p class="poster-save-body" id="poster-save-body">图片已经准备好，长按下方海报即可保存到手机。</p>
+        <p class="poster-save-wechat-note" id="poster-save-wechat-note" hidden></p>
+      </section>
+
+      <section class="poster-save-stage" id="poster-save-stage" hidden>
+        <img class="poster-save-image" id="poster-save-image" alt="可保存的结果海报" hidden />
+      </section>
+
+      <section class="poster-save-panel poster-save-empty" id="poster-save-empty" hidden>
+        <div class="poster-save-empty-icon" aria-hidden="true">🖼️</div>
+        <h2 class="poster-save-empty-title">海报未找到</h2>
+        <p class="poster-save-empty-body">请返回结果页重新生成海报后再保存。</p>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="/src/poster-main.js"></script>
+</body>
+</html>

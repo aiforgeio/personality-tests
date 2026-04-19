@@ -1,0 +1,184 @@
+:root {
+  --poster-bg-start: #f5f8f5;
+  --poster-bg-end: #ffffff;
+  --poster-panel: rgba(255, 255, 255, 0.92);
+  --poster-border: rgba(27, 94, 32, 0.12);
+  --poster-text: #1a1a1a;
+  --poster-text-secondary: #4d5a4f;
+  --poster-text-muted: #708072;
+  --poster-primary: #2e7d32;
+  --poster-shadow: 0 20px 44px rgba(21, 35, 18, 0.12);
+  --poster-radius: 28px;
+  --poster-safe-top: env(safe-area-inset-top, 0px);
+  --poster-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --poster-safe-left: env(safe-area-inset-left, 0px);
+  --poster-safe-right: env(safe-area-inset-right, 0px);
+  --poster-font: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--poster-font);
+  color: var(--poster-text);
+  background:
+    radial-gradient(circle at top left, rgba(102, 187, 106, 0.16), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(33, 150, 243, 0.12), transparent 28%),
+    linear-gradient(180deg, var(--poster-bg-start), var(--poster-bg-end));
+}
+
+a {
+  color: inherit;
+}
+
+.poster-save-page {
+  width: min(100%, 520px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding:
+    calc(var(--poster-safe-top) + 16px)
+    calc(var(--poster-safe-right) + 16px)
+    calc(var(--poster-safe-bottom) + 24px)
+    calc(var(--poster-safe-left) + 16px);
+}
+
+.poster-save-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.poster-save-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(27, 94, 32, 0.08);
+  box-shadow: 0 10px 24px rgba(27, 94, 32, 0.08);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.poster-save-back::before {
+  content: '←';
+  font-size: 1rem;
+}
+
+.poster-save-panel {
+  padding: 20px 18px;
+  border-radius: var(--poster-radius);
+  background: var(--poster-panel);
+  border: 1px solid var(--poster-border);
+  box-shadow: var(--poster-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.poster-save-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.poster-save-kicker {
+  color: var(--poster-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.poster-save-title {
+  margin: 0;
+  font-size: clamp(1.45rem, 7vw, 2rem);
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.poster-save-body,
+.poster-save-wechat-note,
+.poster-save-empty-body {
+  margin: 0;
+  color: var(--poster-text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.poster-save-wechat-note {
+  color: var(--poster-text-muted);
+}
+
+.poster-save-stage {
+  padding: 10px;
+  border-radius: calc(var(--poster-radius) + 4px);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(27, 94, 32, 0.08);
+  box-shadow: var(--poster-shadow);
+}
+
+.poster-save-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 22px;
+  box-shadow: 0 12px 30px rgba(21, 35, 18, 0.12);
+  background: #ffffff;
+  -webkit-touch-callout: default;
+}
+
+.poster-save-empty {
+  display: grid;
+  gap: 10px;
+  place-items: center;
+  text-align: center;
+}
+
+.poster-save-empty-icon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  background: rgba(46, 125, 50, 0.08);
+  color: var(--poster-primary);
+  font-size: 2rem;
+}
+
+.poster-save-empty-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+@media (min-width: 768px) {
+  .poster-save-page {
+    padding-top: 24px;
+    padding-bottom: 32px;
+  }
+
+  .poster-save-shell {
+    gap: 20px;
+  }
+}
