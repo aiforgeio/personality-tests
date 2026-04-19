@@ -48,6 +48,10 @@ a {
   color: inherit;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .poster-save-page {
   width: min(100%, 520px);
   min-height: 100dvh;
